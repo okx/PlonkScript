@@ -1,6 +1,12 @@
-#![cfg(test)]
+//! hello lib
+//! copyright by someone
 
-fn build_vector() -> Vec<i16> {
+/// build a awesome vector
+/// 
+/// And we have some awesome tests:
+/// 
+///     assert_eq!(rust_learn::build_vector(), vec![10, 20]);
+pub fn build_vector() -> Vec<i16> {
     let mut v = Vec::new();
     v.push(10);
     v.push(20);

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{self, BufRead};
+use std::io::BufRead;
 
 type Table = HashMap<String, Vec<String>>;
 
@@ -101,7 +101,7 @@ fn main() {
     let m = &mut v;
     let m0 = &mut m.0;
     *m0 = 137;
-    let r1 = &m.1;
+    // let r1 = &m.1;
     assert_eq!(v.1, 139);
 }
 
