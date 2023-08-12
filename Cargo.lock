@@ -289,15 +289,6 @@ checksum = "76f033c7ad61445c5b347c7382dd1237847eb1bce590fe50365dcb33d546be73"
 [[package]]
 name = "lib_test"
 version = "0.1.0"
-dependencies = [
- "crossbeam",
- "image",
- "iron",
- "mime",
- "num",
- "router",
- "urlencoded",
-]
 
 [[package]]
 name = "libc"
