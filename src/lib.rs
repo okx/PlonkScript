@@ -1,4 +1,5 @@
-#[allow(dead_code)]
+#![cfg(test)]
+
 fn build_vector() -> Vec<i16> {
     let mut v = Vec::new();
     v.push(10);
