@@ -5,7 +5,8 @@
 /// 
 /// And we have some awesome tests:
 /// 
-///     assert_eq!(rust_learn::build_vector(), vec![10, 20]);
+///     # use lib_test::build_vector;
+///     assert_eq!(build_vector(), vec![10, 20]);
 pub fn build_vector() -> Vec<i16> {
     let mut v = Vec::new();
     v.push(10);

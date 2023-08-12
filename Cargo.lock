@@ -287,6 +287,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76f033c7ad61445c5b347c7382dd1237847eb1bce590fe50365dcb33d546be73"
 
 [[package]]
+name = "lib_test"
+version = "0.1.0"
+dependencies = [
+ "crossbeam",
+ "image",
+ "iron",
+ "mime",
+ "num",
+ "router",
+ "urlencoded",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.147"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -554,19 +567,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-learn"
-version = "0.1.0"
-dependencies = [
- "crossbeam",
- "image",
- "iron",
- "mime",
- "num",
- "router",
- "urlencoded",
-]
-
-[[package]]
 name = "rustc-serialize"
 version = "0.3.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -722,6 +722,19 @@ name = "wasi"
 version = "0.10.0+wasi-snapshot-preview1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
+
+[[package]]
+name = "web_gcd"
+version = "0.1.0"
+dependencies = [
+ "crossbeam",
+ "image",
+ "iron",
+ "mime",
+ "num",
+ "router",
+ "urlencoded",
+]
 
 [[package]]
 name = "winapi"
