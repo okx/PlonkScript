@@ -1,2 +1,2 @@
 [workspace]
-members = ["lib_test", "web_gcd"]
+members = ["lib_test", "web_gcd", "struct_test"]
