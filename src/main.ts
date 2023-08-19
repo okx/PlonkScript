@@ -1,0 +1,23 @@
+import "dotenv/config";
+import fs from "fs";
+
+let content = fs.readFileSync("src/input.txt", "utf8");
+
+content = content.replaceAll(/({\s*)([^: ]*)\s*{/g, '$1"$2": {');
+content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
+
+content = content.replaceAll(/([\w\d]+) ?{/g, "{ type: $1,");
+content = content.replaceAll("): [", "");
+
+content = content.replaceAll(/([\w\d]+)\(/g, '[ "$1",');
+content = content.replaceAll(/\(/g, "[");
+content = content.replaceAll(/\)/g, "]");
+
+content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
+content = content.replace(/:\s*([\w\d\.]+)/g, ': "$1"');
+content = content.replace(/,(\s*[\}\]])/g, '$1');
+content = content.replace(/(0x[\d]+)/g, '"$1"');
+content = content.replace(/^(\s*)([\w\d]+)/gm, '$1"$2"');
+
+// console.log(content);
+fs.writeFileSync("output.json", content);
