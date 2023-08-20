@@ -2,17 +2,14 @@
   "name": "halo2visualizer",
   "version": "1.0.0",
   "description": "",
-  "main": "src/main.ts",
+  "main": "index.js",
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@types/node": "^20.5.1",
-    "dotenv": "^16.3.1",
-    "nodemon": "^3.0.1",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
-  }
+  "private":"true",
+  "workspaces":[
+    "packages/*"
+  ]
 }
