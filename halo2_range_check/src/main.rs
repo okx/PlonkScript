@@ -14,16 +14,15 @@ use debug_parser::parse;
 /// |   v'  |       0       |     1    |      1      | // for larger using lookup table
 ///
 use halo2_proofs::{
-    arithmetic::FieldExt,
     circuit::{floor_planner::V1, *},
     dev::{FailureLocation, MockProver, VerifyFailure},
-    pasta::Fp,
+    pasta::{Fp, group::ff::PrimeField},
     plonk::*,
     poly::Rotation,
 };
 
 #[derive(Debug, Clone)]
-struct RangeCheckConfig<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize> {
+struct RangeCheckConfig<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> {
     value: Column<Advice>,
     q_range_check: Selector,
     q_lookup: Selector,
@@ -31,7 +30,7 @@ struct RangeCheckConfig<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usi
     // _marker: PhantomData<F>,
 }
 
-impl<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize>
+impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize>
     RangeCheckConfig<F, RANGE, LOOKUP_RANGE>
 {
     fn configure(meta: &mut ConstraintSystem<F>, value: Column<Advice>) -> Self {
@@ -57,7 +56,7 @@ impl<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize>
 
             let range_check = |range, value: Expression<F>| {
                 (0..range).fold(value.clone(), |acc, cv| {
-                    acc * (Expression::Constant(F::from(cv as u64)) - value.clone())
+                    acc * (Expression::Constant(F::from_u128(cv as u128)) - value.clone())
                 })
             };
 
@@ -114,12 +113,12 @@ impl<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize>
 }
 
 #[derive(Default)]
-struct MyCircuit<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize> {
+struct MyCircuit<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> {
     value: Value<Assigned<F>>,
     large_value: Value<Assigned<F>>,
 }
 
-impl<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize> Circuit<F>
+impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> Circuit<F>
     for MyCircuit<F, RANGE, LOOKUP_RANGE>
 {
     type Config = RangeCheckConfig<F, RANGE, LOOKUP_RANGE>;
@@ -152,20 +151,20 @@ impl<F: FieldExt, const RANGE: usize, const LOOKUP_RANGE: usize> Circuit<F>
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct MockProverJsonRoot {
-    k: usize,
-    n: usize,
-    cs: MockProverJsonConstraintSystem,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// struct MockProverJsonRoot {
+//     k: usize,
+//     n: usize,
+//     cs: MockProverJsonConstraintSystem,
+// }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct MockProverJsonConstraintSystem {
-    num_fixed_columns: usize,
-    num_advice_columns: usize,
-    num_instance_columns: usize,
-    num_selectors: usize,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// struct MockProverJsonConstraintSystem {
+//     num_fixed_columns: usize,
+//     num_advice_columns: usize,
+//     num_instance_columns: usize,
+//     num_selectors: usize,
+// }
 
 fn main() {
     let k = 4;
@@ -185,9 +184,9 @@ fn main() {
             // println!("{:#?}", prover);
             // println!("{}", serde_json::to_string_pretty(&prover).unwrap());
             let d = format!("{:#?}", prover);
-            let dd = parse(&d);
-            // let ddd = format!("{}", serde_json::to_string_pretty(&dd).unwrap());
-            println!("{}", dd);
+            // let dd = parse(&d);
+            // let ddd = format!("{}", serde_json::to_string_pretty(&prover).unwrap());
+            println!("{}", d);
         }
     }
 

@@ -1,0 +1,3 @@
+[submodule "vendor/halo2"]
+	path = vendor/halo2
+	url = git@github.com:zcash/halo2.git
