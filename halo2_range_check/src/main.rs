@@ -26,7 +26,7 @@ struct RangeCheckConfig<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: u
     value: Column<Advice>,
     q_range_check: Selector,
     q_lookup: Selector,
-    table: RangeCheckTable<F, RANGE>,
+    table: RangeCheckTable<F, LOOKUP_RANGE>,
     // _marker: PhantomData<F>,
 }
 
@@ -171,7 +171,7 @@ impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> Circuit<F>
 // }
 
 fn main() {
-    let k = 4;
+    let k = 9;
     const RANGE: usize = 8; // 3-bit value
     const LOOKUP_RANGE: usize = 256; // 8-bit value
 
