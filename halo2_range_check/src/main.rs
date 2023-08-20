@@ -1,7 +1,7 @@
 mod table;
-use table::RangeCheckTable;
+use std::{fs::File, io::Write};
 
-use debug_parser::parse;
+use table::RangeCheckTable;
 
 // use std::{clone, marker::PhantomData};
 
@@ -16,7 +16,7 @@ use debug_parser::parse;
 use halo2_proofs::{
     circuit::{floor_planner::V1, *},
     dev::{FailureLocation, MockProver, VerifyFailure},
-    pasta::{Fp, group::ff::PrimeField},
+    pasta::{group::ff::PrimeField, Fp},
     plonk::*,
     poly::Rotation,
 };
@@ -82,9 +82,9 @@ impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize>
     ) -> Result<(), Error> {
         assert!(range <= LOOKUP_RANGE);
 
-        if range < RANGE {
+        if range <= RANGE {
             layouter.assign_region(
-                || "assign value",
+                || "assign value for simple range check",
                 |mut region| {
                     let offset = 0;
 
@@ -112,7 +112,7 @@ impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize>
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct MyCircuit<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> {
     value: Value<Assigned<F>>,
     large_value: Value<Assigned<F>>,
@@ -140,7 +140,11 @@ impl<F: PrimeField, const RANGE: usize, const LOOKUP_RANGE: usize> Circuit<F>
     ) -> Result<(), Error> {
         config.table.load(&mut layouter)?;
 
-        config.assign(layouter.namespace(|| "Assign value"), self.value, RANGE)?;
+        config.assign(
+            layouter.namespace(|| "Assign simple value"),
+            self.value,
+            RANGE,
+        )?;
         config.assign(
             layouter.namespace(|| "Assign larger value"),
             self.large_value,
@@ -183,30 +187,46 @@ fn main() {
         if i == 6 {
             // println!("{:#?}", prover);
             // println!("{}", serde_json::to_string_pretty(&prover).unwrap());
+            // println!("{:#?}", &circuit);
             let d = format!("{:#?}", prover);
             // let dd = parse(&d);
             // let ddd = format!("{}", serde_json::to_string_pretty(&prover).unwrap());
-            println!("{}", d);
+            // println!("{}", d);
+            // let mut file = File::create("layout.rust").unwrap();
+            let mut file = File::create(
+                "/Users/oker/2-Project/02-zkkyc/halo2visualizer/packages/cli/src/input.rust",
+            )
+            .unwrap();
+            file.write_all(d.as_bytes()).unwrap();
         }
     }
 
     // Out-of-range `value = 8`
     {
         let circuit = MyCircuit::<Fp, RANGE, LOOKUP_RANGE> {
-            value: Value::known(Fp::from(LOOKUP_RANGE as u64).into()),
+            value: Value::known(Fp::from(RANGE as u64).into()),
             large_value: Value::known(Fp::from(LOOKUP_RANGE as u64).into()),
         };
         let prover = MockProver::run(k, &circuit, vec![]).unwrap();
         assert_eq!(
             prover.verify(),
-            Err(vec![VerifyFailure::ConstraintNotSatisfied {
-                constraint: ((0, "range check").into(), 0, "range check").into(),
-                location: FailureLocation::InRegion {
-                    region: (0, "assign value").into(),
-                    offset: 0
+            Err(vec![
+                VerifyFailure::ConstraintNotSatisfied {
+                    constraint: ((0, "range check").into(), 0, "range check").into(),
+                    location: FailureLocation::InRegion {
+                        region: (1, "assign value for simple range check").into(),
+                        offset: 0
+                    },
+                    cell_values: vec![(((Any::Advice, 0).into(), 0).into(), "0x8".to_string())]
                 },
-                cell_values: vec![(((Any::Advice, 0).into(), 0).into(), "0x8".to_string())]
-            }])
+                VerifyFailure::Lookup {
+                    lookup_index: 0,
+                    location: FailureLocation::InRegion {
+                        region: (2, "assign value for lookup range check").into(),
+                        offset: 0
+                    }
+                }
+            ])
         );
     }
 }
