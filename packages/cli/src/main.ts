@@ -1,7 +1,7 @@
 import "dotenv/config";
 import fs from "fs";
 
-let content = fs.readFileSync("src/input.txt", "utf8");
+let content = fs.readFileSync("src/input.rust", "utf8");
 
 content = content.replaceAll(/({\s*)([^: ]*)\s*{/g, '$1"$2": {');
 content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
@@ -20,4 +20,4 @@ content = content.replace(/(0x[\d]+)/g, '"$1"');
 content = content.replace(/^(\s*)([\w\d]+)/gm, '$1"$2"');
 
 // console.log(content);
-fs.writeFileSync("output.json", content);
+fs.writeFileSync("../ui/src/assets/output.json", content);
