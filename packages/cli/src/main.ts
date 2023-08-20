@@ -16,7 +16,7 @@ content = content.replaceAll(/\)/g, "]");
 content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
 content = content.replace(/:\s*([\w\d\.]+)/g, ': "$1"');
 content = content.replace(/,(\s*[\}\]])/g, '$1');
-content = content.replace(/(0x[\d]+)/g, '"$1"');
+content = content.replace(/(0x[\da-f]+)/g, '"$1"');
 content = content.replace(/^(\s*)([\w\d]+)/gm, '$1"$2"');
 
 // console.log(content);
