@@ -1,9 +1,18 @@
 <template>
   <q-page class="row">
     <div class="q-pa-md">
+      <q-checkbox v-model="showTooltip" label="Show Tooltip" />
+      <q-checkbox
+        v-model="showConstraints"
+        label="Show Constraints"
+        @click="toggleConstraints()"
+      />
+
       <table>
         <tr v-for="(c, k) in rmapcolor" :key="k">
-          <td :style="`border: 1px solid ${c};`">{{ k }}</td>
+          <td :style="`border: 1px solid ${c};`">
+            {{ k }}
+          </td>
         </tr>
       </table>
 
@@ -31,10 +40,24 @@
             <q-badge
               :color="getColorByType(props.value.type, props.value.value)"
               :label="props.value.type == 'Selector' ? '' : props.value.value"
-              :title="`${
-                props.value.region ? `Region: ${props.value.region}\n` : ''
-              }Raw: ${props.value.raw}`"
-            />
+              :ref="
+                (el) => {
+                  const elel = (el as any)?.$el;
+                  if (!elel) return;
+                  const col = props.col.name;
+                  if (!cellBadges[col]) cellBadges[col] = {};
+                  cellBadges[col][props.value.index] = elel;
+                }
+              "
+            >
+              <q-tooltip :delay="showTooltip ? 0 : 100000">
+                {{
+                  `${
+                    props.value.region ? `Region: ${props.value.region}\n` : ''
+                  }Raw: ${props.value.raw}`
+                }}
+              </q-tooltip>
+            </q-badge>
           </q-td>
         </template>
         <template v-slot:header-cell="props">
@@ -54,11 +77,13 @@
 import { Ref, ref } from 'vue';
 import data from '../assets/output.json';
 import { QTableColumn } from 'quasar';
+import LeaderLine from 'leader-line-new';
 
 type RowFieldType =
   | 'Unknown'
   | 'Unassigned'
   | 'Assigned'
+  | 'Instance'
   | 'Poison'
   | 'Selector';
 interface RowField {
@@ -91,6 +116,8 @@ function getColorByType(type: RowFieldType, value = ''): string {
     ? 'grey'
     : type == 'Assigned'
     ? 'teal'
+    : type == 'Instance'
+    ? 'darkslategray'
     : type == 'Poison'
     ? 'purple'
     : type == 'Selector'
@@ -106,6 +133,17 @@ const pagination = ref({
   rowsPerPage: -1,
 });
 const columns: Ref<QTableColumn[]> = ref([]);
+
+const showTooltip = ref(false);
+const showConstraints = ref(false);
+
+function toggleConstraints() {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (showConstraints.value) line.show();
+    else line.hide();
+  }
+}
 
 const cols = [
   {
@@ -232,14 +270,14 @@ for (let j = 0; j < Number(data.n); j++) {
     for (let i = 0; i < Number(col.num); i++) {
       const cell =
         col.name == 'instance'
-          ? prettifyCell(data.instance[i][j])
+          ? prettifyCell(data.instance[i][j], col.name)
           : col.name == 'advice'
-          ? prettifyCell(data.advice[i][j])
+          ? prettifyCell(data.advice[i][j], col.name)
           : col.name == 'fixed'
-          ? prettifyCell(data.fixed[i][j])
+          ? prettifyCell(data.fixed[i][j], col.name)
           : col.name == 'selector'
-          ? prettifyCell(data.selectors[i][j])
-          : prettifyCell(undefined);
+          ? prettifyCell(data.selectors[i][j], col.name)
+          : prettifyCell(undefined, col.name);
       obj[`${col.field}${i}`] = {
         ...cell,
         index: j,
@@ -253,18 +291,28 @@ for (let j = 0; j < Number(data.n); j++) {
 
 console.log(rows.value, rmap.value, rmapcolor.value);
 
-function prettifyCell(obj: object | string | string[] | undefined): RowField {
+function prettifyCell(
+  obj: object | string | string[] | undefined,
+  column: string
+): RowField {
   if (obj === undefined) {
     return {
       type: 'Unknown',
     };
   }
   if (typeof obj === 'string') {
-    if (obj == 'true' || obj == 'false') {
+    if ((obj == 'true' || obj == 'false') && column == 'selector') {
       return {
         type: 'Selector',
         raw: obj,
         value: obj,
+      };
+    }
+    if (obj.startsWith('0x') && column == 'instance') {
+      return {
+        type: 'Instance',
+        raw: obj,
+        value: BigInt(obj).toString(),
       };
     }
     return {
@@ -290,6 +338,64 @@ function prettifyCell(obj: object | string | string[] | undefined): RowField {
     raw: JSON.stringify(obj),
   };
 }
+
+const cellBadges = ref<Record<string, Record<string, Element>>>({});
+const lines: LeaderLine[] = [];
+const colDict: Record<string, string> = columns.value.reduce(
+  (pv, cv) => ({ ...pv, [cv.name]: cv.field }),
+  {}
+);
+setTimeout(() => {
+  const mapping = data.permutation.mapping;
+  const cols = data.permutation.columns;
+  for (let c = 0; c < mapping.length; c++) {
+    const mcol = mapping[c];
+    for (let r = 0; r < mcol.length; r++) {
+      const mrow = mcol[r];
+      const col = Number(mrow[0]);
+      const row = Number(mrow[1]);
+
+      // from pointed address(col, row) to current cell(c, r)
+      const tocolname = `${cols[c].column_type.toLowerCase()}-${cols[c].index}`;
+      const fromcolname = `${cols[col].column_type.toLowerCase()}-${
+        cols[col].index
+      }`;
+      if (fromcolname == tocolname && row == r) continue;
+      const from = cellBadges.value[fromcolname][row];
+      const to = cellBadges.value[tocolname][r];
+
+      const fromValue = rows.value[row][colDict[fromcolname]].value;
+      const toValue = rows.value[r][colDict[tocolname]].value;
+
+      const color = fromValue == toValue ? 'wheat' : 'crimson';
+      const outlineColor = fromValue == toValue ? 'tan' : 'coral';
+
+      const line = new LeaderLine(
+        LeaderLine.mouseHoverAnchor(from as HTMLElement, 'fade', {
+          style: {
+            backgroundImage: null,
+            backgroundColor: null,
+            paddingRight: null,
+          },
+          hoverStyle: {
+            backgroundColor: null,
+          },
+        }),
+        to,
+        {
+          color,
+          path: 'straight',
+          size: 4,
+          outline: true,
+          endPlug: 'behind',
+          outlineColor,
+          dash: { animation: true, gap: 4 },
+        }
+      );
+      lines.push(line);
+    }
+  }
+}, 1000);
 </script>
 
 <style scoped lang="scss">

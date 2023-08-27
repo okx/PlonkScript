@@ -2035,6 +2035,16 @@ lazystream@^1.0.0:
   dependencies:
     readable-stream "^2.0.5"
 
+leader-line-new@^1.1.9:
+  version "1.1.9"
+  resolved "https://registry.yarnpkg.com/leader-line-new/-/leader-line-new-1.1.9.tgz#22f5e5708dc54cb32beadffa015bc228a0fe61dc"
+  integrity sha512-x56aRYaqJTA4aAS2fgbSpvWKY3IxRXDSFeGkNBmCQ3LX44B3F1HEjcBTkCiK5I3W0nPWeUTWe7dTt59VtdfFWw==
+
+leader-line@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/leader-line/-/leader-line-1.0.7.tgz#c197268d8346d73f7ac10fe568d677d119c656c1"
+  integrity sha512-PhJpQLV7XychSIuGPD0TEqR9PgRYBbrhReaOcmHFOVtTw4dWKfUMAtOb7UP7xTsoib6sFzq2giQeOUHy7LCuJQ==
+
 levn@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/levn/-/levn-0.4.1.tgz#ae4562c007473b932a6200d403268dd2fffc6ade"
