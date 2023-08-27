@@ -3,7 +3,9 @@ import fs from "fs";
 
 let content = fs.readFileSync("src/input.rust", "utf8");
 
-content = content.replaceAll(/({\s*)([^: ]*)\s*{/g, '$1"$2": {');
+// convert `columns` set to array
+content = content.replaceAll(/(columns: )\{(\n(?: {16}.*\n)+)( {12}})/g, '$1[$2            ]');
+
 content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
 
 content = content.replaceAll(/([\w\d]+) ?{/g, "{ type: $1,");
