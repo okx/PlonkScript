@@ -1,0 +1,73 @@
+// (advices, selector), ?fixed?
+gate mul([a, b], [s]) {
+    0 === s * (a * b - a[1]); // a == a[0], a[1] == next row
+}
+
+/*
+instance   - public input/output - single element
+selector   - public selector     - column element
+advice     - private advice      - column element
+witness    - private input       - column element
+in->advice - private inadvice    - column element
+fixed      - public fixed        - column element
+in->fixed  - public infixed      - column element
+hint       - private hint        - single element
+*/
+
+circuit enforceMiMC(output: advice, enable: selector, hashColumns: advice[]) {
+    //
+}
+
+circuit enforceCountry(countryId: advice, countryUserCount: advice) {
+    signal s = (countryId[1] - countryId[0]);
+    s * (1 - s) === 0;
+    s * (countryUserCount[1] - 1) + (1 - s) * (countryUserCount[1] - countryUserCount[0] - 1) === 0;
+}
+
+/*
+| countryId | countryUserCount |
+| --------- | ---------------- |
+|     1     |         1        |
+|     1     |         2        |
+|     1     |        ...       |
+|     1     |         k        |
+|     2     |         1        |
+|     2     |         2        |
+|     2     |        ...       |
+
+Logic: ((countryId is no change) and (countryUserCount is increasing 1))
+         or ((countryId is increasing 1) and (countryUserCount is reset to 1)) 
+
+a = (countryId[1] - countryId[0]) 
+b = (countryUserCount[1] - countryUserCount[0] - 1) 
+c = (countryId[1] - countryId[0] - 1)
+d = (countryUserCount[1] - 1) 
+
+s = (countryId[1] - countryId[0])
+s * (1 - s) === 0 
+s * (countryUserCount[1] - 1) + (1 - s) * (countryUserCount[1] - countryUserCount[0] - 1) === 0
+
+*/
+
+circuit main() {
+    private inadvice userId;
+    private inadvice userCountry;
+    private inadvice userAge;
+    private inadvice userKycLevel;
+    private inadvice userSalt;
+
+    private advice hash;
+
+    public input challenge; // TODO: is this feasible?
+
+    public selector sHash;
+
+    public output root;
+    public output countries[M];
+
+    enforceMiMC(hash, sHash, [userId, userCountry, userAge, userKycLevel, userSalt]);
+
+    private inadvice countryUserCount;
+
+    enforceCountry(userCountry, countryUserCount);
+}
