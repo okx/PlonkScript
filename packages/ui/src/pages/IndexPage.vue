@@ -85,7 +85,8 @@ type RowFieldType =
   | 'Assigned'
   | 'Instance'
   | 'Poison'
-  | 'Selector';
+  | 'Selector'
+  | 'Gates';
 interface RowField {
   type: RowFieldType;
   raw?: string;
@@ -97,6 +98,64 @@ interface RowFieldWithPosition extends RowField {
   index: number;
   region: string;
 }
+
+type RotationType = ['Rotation', string];
+type PolynomialExpression =
+  | ['Constant', string]
+  // | ["Selector", ]
+  | {
+      type: 'Fixed' | 'Advice' | 'Instance';
+      column_index: string;
+      query_index: string;
+      rotation: RotationType;
+    }
+  | ['Negated', PolynomialExpression]
+  | ['Sum', PolynomialExpression, PolynomialExpression]
+  | ['Product', PolynomialExpression, PolynomialExpression]
+  | ['Scaled', PolynomialExpression, string];
+
+const gates: Ref<Record<string, string>> = ref({});
+
+function quoteIfIncludeAddSub(exp: string): string {
+  if (exp.indexOf('+') >= 0 || exp.indexOf('-') >= 0) {
+    return `(${exp})`;
+  }
+
+  return exp;
+}
+
+function stringifyGate(polys: PolynomialExpression): string {
+  if (Array.isArray(polys)) {
+    if (polys[0] == 'Constant') return polys[1];
+    if (polys[0] == 'Negated') return `-${stringifyGate(polys[1])}`;
+    if (polys[0] == 'Sum') {
+      const second = stringifyGate(polys[2]);
+      return `${stringifyGate(polys[1])}${
+        second.startsWith('-') ? '' : '+'
+      }${second}`;
+    }
+    if (polys[0] == 'Product') {
+      return `${quoteIfIncludeAddSub(
+        stringifyGate(polys[1])
+      )}*${quoteIfIncludeAddSub(stringifyGate(polys[2]))}`;
+    }
+    if (polys[0] == 'Scaled') return `${stringifyGate(polys[1])}^^^${polys[2]}`;
+  }
+
+  // console.log('object polys', polys);
+
+  //TODO: standardize column name getting
+  const rotationHint = polys.rotation[1] == '0' ? '' : `[${polys.rotation[1]}]`;
+  return `${polys.type[0].toLowerCase()}_${polys.column_index}${rotationHint}`;
+}
+
+for (let i = 0; i < data.cs.gates.length; i++) {
+  const gate = data.cs.gates[i];
+  gates.value[gate.name] = gate.polys
+    .map((poly) => stringifyGate(poly as PolynomialExpression))
+    .join(', ');
+}
+console.log(gates.value);
 
 function getColorByColName(col: string): string {
   col = col.slice(0, col.indexOf('-'));
@@ -185,6 +244,14 @@ for (let k = 0; k < cols.length; k++) {
     });
   }
 }
+
+columns.value.push({
+  name: 'gates',
+  label: 'gates',
+  align: 'center',
+  field: 'gates',
+  sortable: false,
+});
 
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<string, string>[]> = ref([]);
@@ -286,7 +353,24 @@ for (let j = 0; j < Number(data.n); j++) {
     }
   }
 
+  obj.gates = {
+    type: 'Gates',
+    index: j,
+    region: '',
+    value: getGatesDesc(data.selectors.map((_) => _[j])),
+  };
+
   rows.value.push(obj);
+}
+
+function getGatesDesc(selector: string[]) {
+  console.log(selector);
+  return data.cs.gates
+    .filter((_) =>
+      _.queried_selectors.some((s) => selector[Number(s[1])] == 'true')
+    )
+    .map((_) => gates.value[_.name])
+    .join('\n');
 }
 
 console.log(rows.value, rmap.value, rmapcolor.value);
