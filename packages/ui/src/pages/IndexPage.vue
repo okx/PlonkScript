@@ -167,6 +167,8 @@ function getColorByColName(col: string): string {
     ? 'light-blue-2'
     : col == 'selector'
     ? 'indigo-2'
+    : col == 'gate'
+    ? 'cyan-2'
     : 'negative';
 }
 
@@ -183,6 +185,8 @@ function getColorByType(type: RowFieldType, value = ''): string {
     ? value == 'true'
       ? 'green'
       : 'indigo-3'
+    : type == 'Gates'
+    ? 'cyan-8'
     : 'negative';
 }
 
