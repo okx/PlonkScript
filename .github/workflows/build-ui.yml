@@ -34,6 +34,10 @@ jobs:
       - name: Install Dependencies
         run: yarn
 
+      - name: Change version number
+        run: |
+          sed -i "s/\/\/ publicPath: '\/'/publicPath: 'halo2visualizer'/" packages/ui/quasar.config.js
+
       - name: Build
         run: |
           yarn build:ui
