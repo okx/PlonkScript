@@ -1,15 +1,40 @@
 <template>
-  <q-page class="row">
+  <q-page class="">
     <div class="q-pa-md">
       <div>
         <q-btn-toggle
           v-model="modelSelection"
           push
-          glossy
           toggle-color="primary"
-          :options="dataList.map((_) => ({ label: _.name, value: _.name }))"
+          :options="dataList.map((_) => ({ label: _.name, value: _ }))"
         />
       </div>
+      <q-card v-if="modelSelection" class="">
+        <q-card-section>
+          <div v-if="modelSelection?.title" class="text-h6">
+            {{ modelSelection.title }}
+          </div>
+        </q-card-section>
+
+        <q-card-section v-if="modelSelection?.description"
+          >{{ modelSelection.description }}
+        </q-card-section>
+
+        <q-separator v-if="modelSelection?.sourceUrl" />
+
+        <q-card-actions>
+          <q-btn
+            flat
+            v-if="modelSelection?.sourceUrl"
+            :href="modelSelection.sourceUrl"
+            target="_blank"
+            icon="open_in_new"
+            >See Source Code</q-btn
+          >
+        </q-card-actions>
+      </q-card>
+    </div>
+    <div class="q-pa-md">
       <q-checkbox v-model="showTooltip" label="Show Tooltip" />
       <q-checkbox
         v-model="showConstraints"
@@ -24,7 +49,8 @@
           </td>
         </tr>
       </table>
-
+    </div>
+    <div class="q-pa-md row">
       <q-table
         :rows="rows"
         :columns="columns"
@@ -84,9 +110,6 @@
 
 <script setup lang="ts">
 import { Ref, ref, watch } from 'vue';
-import o0 from '../assets/output.json';
-import o1 from '../assets/simple_example.json';
-import o2 from '../assets/fib1.json';
 import { QTableColumn } from 'quasar';
 import LeaderLine from 'leader-line-new';
 import {
@@ -98,23 +121,9 @@ import {
   RowFieldWithPosition,
   getPermutationLines,
 } from 'src/services/ConstraintSystem';
+import { IDataModel, dataList } from 'src/services/DefaultModels';
 
-const dataList = [
-  {
-    name: 'Latest',
-    data: o0 as unknown as MockProverData,
-  },
-  {
-    name: 'Simple',
-    data: o1 as unknown as MockProverData,
-  },
-  {
-    name: 'Fib1',
-    data: o2 as unknown as MockProverData,
-  },
-];
-
-const modelSelection = ref('');
+const modelSelection: Ref<IDataModel | undefined> = ref(undefined);
 function getColorByColName(col: string): string {
   col = col.slice(0, col.indexOf('-'));
   return col == 'instance'
@@ -264,11 +273,14 @@ function loadData(data: MockProverData) {
 
 watch(modelSelection, (newValue, oldValue) => {
   if (newValue == oldValue) return;
-  const data = dataList.filter((_) => _.name == newValue)[0];
-  if (!data) return;
-  loadData(data.data);
+  if (!newValue) {
+    rows.value = [];
+    columns.value = [];
+    return;
+  }
+  loadData(newValue.data);
 });
-modelSelection.value = dataList[0].name;
+modelSelection.value = dataList[0];
 </script>
 
 <style scoped lang="scss">

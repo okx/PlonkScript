@@ -1,0 +1,714 @@
+{ "type": "MockProver",
+    "k": "4",
+    "n": "16",
+    "cs": { "type": "ConstraintSystem",
+        "num_fixed_columns": "1",
+        "num_advice_columns": "5",
+        "num_instance_columns": "0",
+        "num_selectors": "1",
+        "selector_map": [
+            { "type": "Column",
+                "index": "0",
+                "column_type": "Fixed"
+            }
+        ],
+        "gates": [
+            { "type": "Gate",
+                "name": "is_zero",
+                "constraint_names": [
+                    ""
+                ],
+                "polys": [
+                    [ "Product",
+                        [ "Product",
+                            { "type": "Fixed",
+                                "query_index": "0",
+                                "column_index": "0",
+                                "rotation": [ "Rotation",
+                                    "0"
+                                ]
+                            },
+                            [ "Sum",
+                                { "type": "Advice",
+                                    "query_index": "0",
+                                    "column_index": "0",
+                                    "rotation": [ "Rotation",
+                                        "0"
+                                    ]
+                                },
+                                [ "Negated",
+                                    { "type": "Advice",
+                                        "query_index": "1",
+                                        "column_index": "1",
+                                        "rotation": [ "Rotation",
+                                            "0"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        ],
+                        [ "Sum",
+                            [ "Constant",
+                                "0x0000000000000000000000000000000000000000000000000000000000000001"
+                            ],
+                            [ "Negated",
+                                [ "Product",
+                                    [ "Sum",
+                                        { "type": "Advice",
+                                            "query_index": "0",
+                                            "column_index": "0",
+                                            "rotation": [ "Rotation",
+                                                "0"
+                                            ]
+                                        },
+                                        [ "Negated",
+                                            { "type": "Advice",
+                                                "query_index": "1",
+                                                "column_index": "1",
+                                                "rotation": [ "Rotation",
+                                                    "0"
+                                                ]
+                                            }
+                                        ]
+                                    ],
+                                    { "type": "Advice",
+                                        "query_index": "2",
+                                        "column_index": "4",
+                                        "rotation": [ "Rotation",
+                                            "0"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "queried_selectors": [
+                    [ "Selector",
+                        "0",
+                        "true"
+                    ]
+                ],
+                "queried_cells": [
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "0",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    },
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "1",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    },
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "4",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    }
+                ]
+            },
+            { "type": "Gate",
+                "name": "f(a, b, c) = if a == b {c} else {a - b}",
+                "constraint_names": [
+                    "",
+                    ""
+                ],
+                "polys": [
+                    [ "Product",
+                        { "type": "Fixed",
+                            "query_index": "0",
+                            "column_index": "0",
+                            "rotation": [ "Rotation",
+                                "0"
+                            ]
+                        },
+                        [ "Product",
+                            [ "Sum",
+                                [ "Constant",
+                                    "0x0000000000000000000000000000000000000000000000000000000000000001"
+                                ],
+                                [ "Negated",
+                                    [ "Product",
+                                        [ "Sum",
+                                            { "type": "Advice",
+                                                "query_index": "0",
+                                                "column_index": "0",
+                                                "rotation": [ "Rotation",
+                                                    "0"
+                                                ]
+                                            },
+                                            [ "Negated",
+                                                { "type": "Advice",
+                                                    "query_index": "1",
+                                                    "column_index": "1",
+                                                    "rotation": [ "Rotation",
+                                                        "0"
+                                                    ]
+                                                }
+                                            ]
+                                        ],
+                                        { "type": "Advice",
+                                            "query_index": "2",
+                                            "column_index": "4",
+                                            "rotation": [ "Rotation",
+                                                "0"
+                                            ]
+                                        }
+                                    ]
+                                ]
+                            ],
+                            [ "Sum",
+                                { "type": "Advice",
+                                    "query_index": "4",
+                                    "column_index": "3",
+                                    "rotation": [ "Rotation",
+                                        "0"
+                                    ]
+                                },
+                                [ "Negated",
+                                    { "type": "Advice",
+                                        "query_index": "3",
+                                        "column_index": "2",
+                                        "rotation": [ "Rotation",
+                                            "0"
+                                        ]
+                                    }
+                                ]
+                            ]
+                        ]
+                    ],
+                    [ "Product",
+                        [ "Product",
+                            { "type": "Fixed",
+                                "query_index": "0",
+                                "column_index": "0",
+                                "rotation": [ "Rotation",
+                                    "0"
+                                ]
+                            },
+                            [ "Sum",
+                                [ "Constant",
+                                    "0x0000000000000000000000000000000000000000000000000000000000000001"
+                                ],
+                                [ "Negated",
+                                    [ "Sum",
+                                        [ "Constant",
+                                            "0x0000000000000000000000000000000000000000000000000000000000000001"
+                                        ],
+                                        [ "Negated",
+                                            [ "Product",
+                                                [ "Sum",
+                                                    { "type": "Advice",
+                                                        "query_index": "0",
+                                                        "column_index": "0",
+                                                        "rotation": [ "Rotation",
+                                                            "0"
+                                                        ]
+                                                    },
+                                                    [ "Negated",
+                                                        { "type": "Advice",
+                                                            "query_index": "1",
+                                                            "column_index": "1",
+                                                            "rotation": [ "Rotation",
+                                                                "0"
+                                                            ]
+                                                        }
+                                                    ]
+                                                ],
+                                                { "type": "Advice",
+                                                    "query_index": "2",
+                                                    "column_index": "4",
+                                                    "rotation": [ "Rotation",
+                                                        "0"
+                                                    ]
+                                                }
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        [ "Sum",
+                            { "type": "Advice",
+                                "query_index": "4",
+                                "column_index": "3",
+                                "rotation": [ "Rotation",
+                                    "0"
+                                ]
+                            },
+                            [ "Negated",
+                                [ "Sum",
+                                    { "type": "Advice",
+                                        "query_index": "0",
+                                        "column_index": "0",
+                                        "rotation": [ "Rotation",
+                                            "0"
+                                        ]
+                                    },
+                                    [ "Negated",
+                                        { "type": "Advice",
+                                            "query_index": "1",
+                                            "column_index": "1",
+                                            "rotation": [ "Rotation",
+                                                "0"
+                                            ]
+                                        }
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                "queried_selectors": [
+                    [ "Selector",
+                        "0",
+                        "true"
+                    ]
+                ],
+                "queried_cells": [
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "0",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    },
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "1",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    },
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "2",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    },
+                    { "type": "VirtualCell",
+                        "column": { "type": "Column",
+                            "index": "3",
+                            "column_type": "Advice"
+                        },
+                        "rotation": [ "Rotation",
+                            "0"
+                        ]
+                    }
+                ]
+            }
+        ],
+        "advice_queries": [
+            [
+                { "type": "Column",
+                    "index": "0",
+                    "column_type": "Advice"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ],
+            [
+                { "type": "Column",
+                    "index": "1",
+                    "column_type": "Advice"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ],
+            [
+                { "type": "Column",
+                    "index": "4",
+                    "column_type": "Advice"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ],
+            [
+                { "type": "Column",
+                    "index": "2",
+                    "column_type": "Advice"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ],
+            [
+                { "type": "Column",
+                    "index": "3",
+                    "column_type": "Advice"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ]
+        ],
+        "num_advice_queries": [
+            "1",
+            "1",
+            "1",
+            "1",
+            "1"
+        ],
+        "instance_queries": [],
+        "fixed_queries": [
+            [
+                { "type": "Column",
+                    "index": "0",
+                    "column_type": "Fixed"
+                },
+                [ "Rotation",
+                    "0"
+                ]
+            ]
+        ],
+        "permutation": { "type": "Argument",
+            "columns": []
+        },
+        "lookups": [],
+        "constants": [],
+        "minimum_degree": "None"
+    },
+    "regions": [
+        { "type": "Region",
+            "name": "f(a, b, c) = if a == b {c} else {a - b}",
+            "columns": [
+                { "type": "Column",
+                    "index": "3",
+                    "column_type": "Advice"
+                },
+                { "type": "Column",
+                    "index": "1",
+                    "column_type": "Advice"
+                },
+                { "type": "Column",
+                    "index": "0",
+                    "column_type": "Advice"
+                },
+                { "type": "Column",
+                    "index": "2",
+                    "column_type": "Advice"
+                },
+                { "type": "Column",
+                    "index": "4",
+                    "column_type": "Advice"
+                }
+            ],
+            "rows": [ "Some",
+                [
+                    "0",
+                    "0"
+                ]
+            ],
+            "enabled_selectors": {
+                "Selector": [
+                    "0",
+                    "true",
+                
+                    "0"
+                ]
+            },
+            "cells": [
+                [
+                    { "type": "Column",
+                        "index": "0",
+                        "column_type": "Advice"
+                    },
+                    "0"
+                ],
+                [
+                    { "type": "Column",
+                        "index": "1",
+                        "column_type": "Advice"
+                    },
+                    "0"
+                ],
+                [
+                    { "type": "Column",
+                        "index": "2",
+                        "column_type": "Advice"
+                    },
+                    "0"
+                ],
+                [
+                    { "type": "Column",
+                        "index": "4",
+                        "column_type": "Advice"
+                    },
+                    "0"
+                ],
+                [
+                    { "type": "Column",
+                        "index": "3",
+                        "column_type": "Advice"
+                    },
+                    "0"
+                ]
+            ]
+        }
+    ],
+    "current_region": "None",
+    "fixed": [
+        [
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000001"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ],
+            [ "Assigned",
+                "0x0000000000000000000000000000000000000000000000000000000000000000"
+            ]
+        ]
+    ],
+    "advice": [
+        [
+            [ "Assigned",
+                "0x000000000000000000000000000000000000000000000000000000000000000a"
+            ],
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            [ "Poison",
+                "10"
+            ],
+            [ "Poison",
+                "11"
+            ],
+            [ "Poison",
+                "12"
+            ],
+            [ "Poison",
+                "13"
+            ],
+            [ "Poison",
+                "14"
+            ],
+            [ "Poison",
+                "15"
+            ]
+        ],
+        [
+            [ "Assigned",
+                "0x000000000000000000000000000000000000000000000000000000000000000c"
+            ],
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            [ "Poison",
+                "10"
+            ],
+            [ "Poison",
+                "11"
+            ],
+            [ "Poison",
+                "12"
+            ],
+            [ "Poison",
+                "13"
+            ],
+            [ "Poison",
+                "14"
+            ],
+            [ "Poison",
+                "15"
+            ]
+        ],
+        [
+            [ "Assigned",
+                "0x000000000000000000000000000000000000000000000000000000000000000f"
+            ],
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            [ "Poison",
+                "10"
+            ],
+            [ "Poison",
+                "11"
+            ],
+            [ "Poison",
+                "12"
+            ],
+            [ "Poison",
+                "13"
+            ],
+            [ "Poison",
+                "14"
+            ],
+            [ "Poison",
+                "15"
+            ]
+        ],
+        [
+            [ "Assigned",
+                "0x40000000000000000000000000000000224698fc094cf91b992d30ecffffffff"
+            ],
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            [ "Poison",
+                "10"
+            ],
+            [ "Poison",
+                "11"
+            ],
+            [ "Poison",
+                "12"
+            ],
+            [ "Poison",
+                "13"
+            ],
+            [ "Poison",
+                "14"
+            ],
+            [ "Poison",
+                "15"
+            ]
+        ],
+        [
+            [ "Assigned",
+                "0x2000000000000000000000000000000011234c7e04a67c8dcc96987680000000"
+            ],
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            "Unassigned",
+            [ "Poison",
+                "10"
+            ],
+            [ "Poison",
+                "11"
+            ],
+            [ "Poison",
+                "12"
+            ],
+            [ "Poison",
+                "13"
+            ],
+            [ "Poison",
+                "14"
+            ],
+            [ "Poison",
+                "15"
+            ]
+        ]
+    ],
+    "instance": [],
+    "selectors": [
+        [
+            "true",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false",
+            "false"
+        ]
+    ],
+    "permutation": { "type": "Assembly",
+        "columns": [],
+        "mapping": [],
+        "aux": [],
+        "sizes": []
+    },
+    "usable_rows": "0..10"
+}
