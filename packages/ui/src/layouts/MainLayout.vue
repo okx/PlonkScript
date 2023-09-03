@@ -12,10 +12,10 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          Halo2 Visualizer
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div>Demo Version</div>
       </q-toolbar>
     </q-header>
 
