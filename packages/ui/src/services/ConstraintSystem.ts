@@ -96,12 +96,11 @@ export interface RegionsEntity {
   name: string;
   columns: ColumnType[];
   rows: (string | string[])[];
-  enabled_selectors: EnabledSelectors;
+  enabled_selectors: EnabledSelector[];
   cells: [ColumnType, string][];
 }
-export interface EnabledSelectors {
-  Selector: string[];
-}
+export type EnabledSelector = ['Selector', ...string[]];
+
 export interface MockProverDataPermutation {
   type: string;
   columns: ColumnType[];
@@ -252,22 +251,20 @@ export function getRowsAndRegions(
     }
 
     // for selectors
-    // for (let i = 0; i < region.enabled_selectors.length; i++) {
-    //   const sel = region.enabled_selectors[i];
-
-    // }
-    for (const key in region.enabled_selectors) {
-      if (Object.prototype.hasOwnProperty.call(region.enabled_selectors, key)) {
-        const sel = (
-          region.enabled_selectors as unknown as { [key: string]: string[] }
-        )[key];
-        const colname = `selector-${sel[0]}`;
-        const rowidx = Number(sel[2]);
+    for (let i = 0; i < region.enabled_selectors.length; i++) {
+      const sel = region.enabled_selectors[i];
+      const colname = `selector-${sel[1]}`;
+      for (let j = 3; j < sel.length; j++) {
+        const rowidx = Number(sel[j]);
         rmap[rowidx][colname] = rname;
 
         if (!rmapcolor[rname])
           rmapcolor[rname] =
             colorList[Object.keys(rmapcolor).length % colorList.length];
+      }
+    }
+    for (const key in region.enabled_selectors) {
+      if (Object.prototype.hasOwnProperty.call(region.enabled_selectors, key)) {
       }
     }
   }

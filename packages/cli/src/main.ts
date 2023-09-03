@@ -16,6 +16,9 @@ for (const m of matches) {
 // convert `columns` set to array
 content = content.replaceAll(/(columns: )\{(\n(?: {16}.*\n)+)( {12}})/g, "$1[$2            ]");
 
+// convert `enabled_selectors` set to array
+content = content.replaceAll(/(enabled_selectors: )\{(\n(?: {16}.*\n)+)( {12}})/g, "$1[$2            ]");
+
 content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
 
 content = content.replaceAll(/([\w\d]+) ?{/g, "{ type: $1,");
