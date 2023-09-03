@@ -1,6 +1,15 @@
 <template>
   <q-page class="row">
     <div class="q-pa-md">
+      <div>
+        <q-btn-toggle
+          v-model="modelSelection"
+          push
+          glossy
+          toggle-color="primary"
+          :options="dataList.map((_) => ({ label: _.name, value: _.name }))"
+        />
+      </div>
       <q-checkbox v-model="showTooltip" label="Show Tooltip" />
       <q-checkbox
         v-model="showConstraints"
@@ -74,8 +83,10 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
-import o1 from '../assets/output.json';
+import { Ref, ref, watch } from 'vue';
+import o0 from '../assets/output.json';
+import o1 from '../assets/simple_example.json';
+import o2 from '../assets/fib1.json';
 import { QTableColumn } from 'quasar';
 import LeaderLine from 'leader-line-new';
 import {
@@ -84,13 +95,26 @@ import {
   getColumns,
   MockProverData,
   getRowsAndRegions,
-  RowField,
   RowFieldWithPosition,
   getPermutationLines,
 } from 'src/services/ConstraintSystem';
 
-const data = o1 as unknown as MockProverData;
+const dataList = [
+  {
+    name: 'Latest',
+    data: o0 as unknown as MockProverData,
+  },
+  {
+    name: 'Simple',
+    data: o1 as unknown as MockProverData,
+  },
+  {
+    name: 'Fib1',
+    data: o2 as unknown as MockProverData,
+  },
+];
 
+const modelSelection = ref('');
 function getColorByColName(col: string): string {
   col = col.slice(0, col.indexOf('-'));
   return col == 'instance'
@@ -124,13 +148,11 @@ function getColorByType(type: RowFieldType, value = ''): string {
     : 'negative';
 }
 
-console.log(data);
 const pagination = ref({
   page: 1,
   rowsPerPage: -1,
 });
-const cols = getColumnDefinition(data);
-const columns: Ref<QTableColumn[]> = ref(getColumns(cols));
+const columns: Ref<QTableColumn[]> = ref([]);
 
 const showTooltip = ref(false);
 const showConstraints = ref(false);
@@ -146,12 +168,6 @@ function toggleConstraints() {
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<string, string>[]> = ref([]);
 const rmapcolor: Ref<Record<string, string>> = ref({});
-
-const colorList = ['red', 'blue', 'wheat', 'green'];
-const rr = getRowsAndRegions(data, cols, colorList);
-rows.value = rr.rows;
-rmap.value = rr.rmap;
-rmapcolor.value = rr.rmapcolor;
 
 function getBorderOfRegion(
   row: RowFieldWithPosition,
@@ -182,7 +198,7 @@ function getBorderOfRegion(
 const cellBadges = ref<Record<string, Record<string, Element>>>({});
 const lines: LeaderLine[] = [];
 
-setTimeout(() => {
+function drawLines(data: MockProverData) {
   const plines = getPermutationLines(
     data,
     cellBadges.value,
@@ -220,7 +236,33 @@ setTimeout(() => {
     );
     lines.push(line);
   }
-}, 1000);
+}
+
+function loadData(data: MockProverData) {
+  console.log(data);
+  const cols = getColumnDefinition(data);
+  const colsdata = getColumns(cols);
+  columns.value = colsdata;
+  const colorList = ['red', 'blue', 'wheat', 'green'];
+  const rr = getRowsAndRegions(data, cols, colorList);
+  rows.value = rr.rows;
+  rmap.value = rr.rmap;
+  rmapcolor.value = rr.rmapcolor;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    line.remove();
+  }
+  lines.length = 0;
+  setTimeout(() => drawLines(data), 300);
+}
+
+watch(modelSelection, (newValue, oldValue) => {
+  if (newValue == oldValue) return;
+  const data = dataList.filter((_) => _.name == newValue)[0];
+  if (!data) return;
+  loadData(data.data);
+});
+modelSelection.value = dataList[0].name;
 </script>
 
 <style scoped lang="scss">
