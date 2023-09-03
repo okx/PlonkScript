@@ -1,0 +1,56 @@
+name: build-ui
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/ui/**"
+      - ".github/workflows/build-ui.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "packages/ui/**"
+      - ".github/workflows/build-ui.yml"
+
+env:
+  VERSION: 0.1.${{ github.run_number }}
+
+defaults:
+  run:
+    working-directory: ./packages/ui
+
+jobs:
+  build-pawket:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Node.js 18.x (ui)
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn"
+          cache-dependency-path: "packages/ui/yarn.lock"
+
+      - name: Install Dependencies
+        run: yarn
+
+      - name: Change version number
+        run: |
+          sed -i "s/0.1/${VERSION}/" .env
+
+      - name: Build
+        run: |
+          yarn build
+
+      - name: version
+        run: |
+          echo ${VERSION}>dist/spa/version.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ui
+          path: packages/ui/dist/spa
