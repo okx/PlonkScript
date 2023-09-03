@@ -119,7 +119,7 @@ function quoteIfIncludeAddSub(exp: string): string {
 
 export function stringifyGate(polys: PolynomialExpression): string {
   if (Array.isArray(polys)) {
-    if (polys[0] == 'Constant') return polys[1];
+    if (polys[0] == 'Constant') return BigInt(polys[1]).toString();
     if (polys[0] == 'Negated') return `-${stringifyGate(polys[1])}`;
     if (polys[0] == 'Sum') {
       const second = stringifyGate(polys[2]);
