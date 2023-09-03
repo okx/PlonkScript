@@ -192,6 +192,7 @@ function getBorderOfRegion(
   if (right && rmap.value[y][right] == name) border += ' no_border_right';
   else border += ' cell_border_right';
 
+  // console.log(border, columns.value, rmap.value, row, col);
   return border;
 }
 
@@ -239,20 +240,25 @@ function drawLines(data: MockProverData) {
 }
 
 function loadData(data: MockProverData) {
-  console.log(data);
-  const cols = getColumnDefinition(data);
-  const colsdata = getColumns(cols);
-  columns.value = colsdata;
-  const colorList = ['red', 'blue', 'wheat', 'green'];
-  const rr = getRowsAndRegions(data, cols, colorList);
-  rows.value = rr.rows;
-  rmap.value = rr.rmap;
-  rmapcolor.value = rr.rmapcolor;
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    line.remove();
-  }
-  lines.length = 0;
+  // console.log(data);
+  rows.value = [];
+  columns.value = [];
+
+  setTimeout(() => {
+    const cols = getColumnDefinition(data);
+    const colsdata = getColumns(cols);
+    columns.value = colsdata;
+    const colorList = ['red', 'blue', 'wheat', 'green'];
+    const rr = getRowsAndRegions(data, cols, colorList);
+    rows.value = rr.rows;
+    rmap.value = rr.rmap;
+    rmapcolor.value = rr.rmapcolor;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      line.remove();
+    }
+    lines.length = 0;
+  }, 100);
   setTimeout(() => drawLines(data), 300);
 }
 
