@@ -28,7 +28,7 @@
             v-if="modelSelection?.sourceUrl"
             :href="modelSelection.sourceUrl"
             target="_blank"
-            icon="open_in_new"
+            :icon="matOpenInNew"
             >See Source Code</q-btn
           >
         </q-card-actions>
@@ -111,6 +111,7 @@
 <script setup lang="ts">
 import { Ref, ref, watch } from 'vue';
 import { QTableColumn } from 'quasar';
+import { matOpenInNew } from '@quasar/extras/material-icons';
 import LeaderLine from 'leader-line-new';
 import {
   RowFieldType,
