@@ -4,13 +4,21 @@ chip FibonacciChip([a, b, c], [s], [i]) {
 
 // (advices, selector), ?fixed?
 gate add([a, b, c], [s]) {
-    return s * (a + b - c); // a == a[0]
+    return <<s * (a + b - c)>>; // a == a[0]
 }
 
 circuit main(N) {
     public input in1;
     public input in2;
     public output out;
+
+    private advice a;
+    private advice b;
+    private advice c;
+
+    public selector s;
+
+    add([a, b, c], [s]);
 
     #region: first row
     a[0] <== in1;
@@ -23,6 +31,7 @@ circuit main(N) {
             a[i] <== b[i - 1];
             b[i] <== c[i - 1];
         }
+        s[i] <-- 1;
     }
 
     out <== c[N-1];

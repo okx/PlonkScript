@@ -4,31 +4,42 @@ chip FibonacciChip([a, b, c], [s], [i]) {
 
 // (advices, selector), ?fixed?
 gate mul([a, b], [s]) {
-    0 === s * (a * b - a[1]); // a == a[0], a[1] == next row
+    return <<s * (a * b - a[1])>>; // a == a[0], a[1] == next row
 }
 
 circuit main(N) {
     private input in1;
     private input in2;
     public output out;
-    public const c = 7;
+
+    private advice a;
+    private advice b;
+    public fixed f;
+    public selector s;
+
+    f[0] <-- 7;
 
     #region: load private
     a[0] <== in1;
     a[1] <== in2;
 
     #region: load constant
-    a[2] <== c;
+    a[2] <== f[0];
 
     #region: mul
+    mul([a, b], [s]);
+
+    s[3] <-- 1;
     a[3] <== a[0];
     b[3] <== a[1];
     a[4] <== a[3] * b[3];
 
+    s[5] <-- 1;
     a[5] <== a[4];
     b[5] <== a[4];
     a[6] <== a[5] * b[5];
 
+    s[7] <-- 1;
     a[7] <== a[2];
     b[7] <== a[6];
     a[8] <== a[7] * b[7];
