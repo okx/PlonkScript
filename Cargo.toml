@@ -1,2 +1,9 @@
 [workspace]
-members = ["lib_test", "web_gcd", "struct_test", "halo2_range_check"]
+members = [
+    "lib_test",
+    "web_gcd",
+    "struct_test",
+    "halo2_range_check",
+    "plonk_by_hand",
+]
+resolver = "2"
