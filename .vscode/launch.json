@@ -170,6 +170,24 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug main in executable 'rhai'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rhai_script",
+                    // "--package=rhai_script"
+                ],
+                "filter": {
+                    "name": "rhai_script",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
