@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use regex::Regex;
 use rhai::{ASTNode, Array, Engine, EvalAltResult, Position};
 
@@ -109,14 +111,21 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
     // engine.register_type_with_name::<TestStruct>("TestStruct")
     // .register_fn("new_ts", TestStruct::new)
     engine
+        .register_type_with_name::<Column>("Column")
         .register_fn("init_input", init_input)
         .register_fn("init_output", init_output)
         .register_fn("init_advice_column", init_advice_column)
         .register_fn("init_selector_column", init_selector_column)
         .register_fn("define_region", define_region)
         .register_fn("assign_constraint", assign_constraint)
+        .register_fn("assign_constraint", assign_constraint_int)
         .register_fn("assign_only", assign_only)
-        .register_fn("set_gate", set_gate);
+        .register_fn("assign_only", assign_only_int)
+        .register_fn("set_gate", set_gate)
+        .register_fn("+", operator_add)
+        .register_indexer_get(Column::get_field)
+        // .register_indexer_set(TestStruct::set_field)
+        ;
 
     engine.run_file("rhai_script/fibonacci.plonk".into())?;
 
@@ -124,37 +133,110 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
     Ok(())
 }
 
-fn init_input(v: &str) -> &str {
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+enum ColumnType {
+    Selector,
+    Advice,
+    Fixed,
+    Instance,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+enum SpecialType {
+    Input,
+    Output,
+    Field,
+    None,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct Column {
+    name: String,
+    ctype: ColumnType,
+    stype: SpecialType,
+}
+
+impl Column {
+    fn get_field(&mut self, index: i64) -> Column {
+        let name = format!("{}[{}]", self.name, index);
+        Column {
+            name: name,
+            ctype: self.ctype.clone(),
+            stype: SpecialType::Field,
+        }
+    }
+}
+
+fn init_input(v: &str) -> Column {
     println!("init_input({})", v);
-    v
+    Column {
+        name: v.to_string(),
+        ctype: ColumnType::Instance,
+        stype: SpecialType::Input,
+    }
 }
-fn init_output(v: String) -> String {
+fn init_output(v: String) -> Column {
     println!("init_output({})", v);
-    v
+    Column {
+        name: v.to_string(),
+        ctype: ColumnType::Instance,
+        stype: SpecialType::Input,
+    }
 }
-fn init_advice_column(v: String) -> String {
+fn init_advice_column(v: String) -> Column {
     println!("init_advice_column({})", v);
-    v
+    Column {
+        name: v.to_string(),
+        ctype: ColumnType::Advice,
+        stype: SpecialType::None,
+    }
 }
-fn init_selector_column(v: String) -> String {
+fn init_selector_column(v: String) -> Column {
     println!("init_selector_column({})", v);
-    v
+    Column {
+        name: v.to_string(),
+        ctype: ColumnType::Selector,
+        stype: SpecialType::None,
+    }
 }
 fn define_region(v: String) {
     println!("define_region({})", v);
     ()
 }
-fn assign_constraint(a: String, b: String) {
-    println!("assign_constraint({}, {})", a, b);
+fn assign_constraint(a: Column, b: Column) {
+    println!("assign_constraint({:?}, {:?})", a, b);
     ()
 }
-fn assign_only(a: String, b: String) {
-    println!("assign_only({}, {})", a, b);
+fn assign_constraint_int(a: Column, b: i64) {
+    println!("assign_constraint({:?}, {})", a, b);
+    ()
+}
+fn assign_only(a: Column, b: Column) {
+    println!("assign_only({:?}, {:?})", a, b);
+    ()
+}
+fn assign_only_int(a: Column, b: i64) {
+    println!("assign_only({:?}, {})", a, b);
     ()
 }
 fn set_gate(advices: Array, selectors: Array, a: String, b: String, c: String) {
-    println!("set_gate({:?}, {:?}, {}, {}, {})", advices, selectors, a, b, c);
+    println!(
+        "set_gate({:?}, {:?}, {}, {}, {})",
+        advices, selectors, a, b, c
+    );
     ()
+}
+fn operator_add(a: Column, b: Column) -> Column {
+    println!("assign_constraint({:?}, {:?})", a, b);
+    let n = format!("{} + {}", a.name, b.name);
+    Column {
+        name: n,
+        ctype: ColumnType::Selector,
+        stype: SpecialType::None,
+    }
 }
 
 /// Transcode the Rhai AST Node to uLisp

@@ -32,24 +32,24 @@ fn add(advices, selectors) {
     define_region("first row");
     // a[0] <== in1;
     // b[0] <== in2;
-    assign_constraint("a[0]", "in1");
-    assign_constraint("b[0]", "in2");
+    assign_constraint(a[0], in1);
+    assign_constraint(b[0], in2);
 
     // #region: next row
     define_region("next row");
     for i in 0..N {
         // c[i] <== a[i] + b[i];
-        assign_constraint("c[i]", "a[i] + b[i]");
+        assign_constraint(c[i], a[i] + b[i]);
         if (i > 0) {
             // a[i] <== b[i - 1];
             // b[i] <== c[i - 1];
-            assign_constraint("a[i]", "b[i - 1]");
-            assign_constraint("b[i]", "c[i - 1]");
+            assign_constraint(a[i], b[i - 1]);
+            assign_constraint(b[i], c[i - 1]);
         }
         // s[i] <-- 1;
-        assign_only("s[i]", "1");
+        assign_only(s[i], 1);
     }
 
     // out <== c[N-1];
-    assign_constraint("out", "c[N-1]");
+    assign_constraint(out, c[N-1]);
 // }
