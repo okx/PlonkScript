@@ -1,23 +1,25 @@
-use std::fmt::format;
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
 
 use regex::Regex;
 use rhai::{ASTNode, Array, Engine, EvalAltResult, Position};
 
-use rhai::{Dynamic, ImmutableString};
+// use rhai::{Dynamic, ImmutableString};
 
-// Normal function that returns a standard type
-// Remember to use 'ImmutableString' and not 'String'
-fn add_len(x: i64, s: ImmutableString) -> i64 {
-    x + s.len() as i64
-}
-// Alternatively, '&str' maps directly to 'ImmutableString'
-fn add_len_count(x: i64, s: &str, c: i64) -> i64 {
-    x + (s.len() as i64) * c
-}
-// Function that returns a 'Dynamic' value
-fn get_any_value() -> Dynamic {
-    42_i64.into() // standard types can use '.into()'
-}
+// // Normal function that returns a standard type
+// // Remember to use 'ImmutableString' and not 'String'
+// fn add_len(x: i64, s: ImmutableString) -> i64 {
+//     x + s.len() as i64
+// }
+// // Alternatively, '&str' maps directly to 'ImmutableString'
+// fn add_len_count(x: i64, s: &str, c: i64) -> i64 {
+//     x + (s.len() as i64) * c
+// }
+// // Function that returns a 'Dynamic' value
+// fn get_any_value() -> Dynamic {
+//     42_i64.into() // standard types can use '.into()'
+// }
 
 pub fn main() -> Result<(), Box<EvalAltResult>>
 //                          ^^^^^^^^^^^^^^^^^^
@@ -66,37 +68,37 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
 
     let mut engine = Engine::new();
 
-    // Notice that all three functions are overloaded into the same name with
-    // different number of parameters and/or parameter types.
-    engine
-        .register_fn("add", add_len)
-        .register_fn("add", add_len_count)
-        .register_fn("add", get_any_value)
-        .register_fn("inc", |x: i64| {
-            // closure is also OK!
-            x + 1
-        })
-        .register_fn("log", |label: &str, x: i64| {
-            println!("{label} = {x}");
-        });
+    // // Notice that all three functions are overloaded into the same name with
+    // // different number of parameters and/or parameter types.
+    // engine
+    //     .register_fn("add", add_len)
+    //     .register_fn("add", add_len_count)
+    //     .register_fn("add", get_any_value)
+    //     .register_fn("inc", |x: i64| {
+    //         // closure is also OK!
+    //         x + 1
+    //     })
+    //     .register_fn("log", |label: &str, x: i64| {
+    //         println!("{label} = {x}");
+    //     });
 
-    let result = engine.eval::<i64>(r#"add(40, "xxx")"#)?;
+    // let result = engine.eval::<i64>(r#"add(40, "xxx")"#)?;
 
-    println!("Answer: {result}"); // prints 42
+    // println!("Answer: {result}"); // prints 42
 
-    let result = engine.eval::<i64>(r#"add(40, "xxx", 2)"#)?;
+    // let result = engine.eval::<i64>(r#"add(40, "xxx", 2)"#)?;
 
-    println!("Answer: {result}"); // prints 42
+    // println!("Answer: {result}"); // prints 42
 
-    let result = engine.eval::<i64>("add()")?;
+    // let result = engine.eval::<i64>("add()")?;
 
-    println!("Answer: {result}"); // prints 42
+    // println!("Answer: {result}"); // prints 42
 
-    let result = engine.eval::<i64>("inc(40)")?;
+    // let result = engine.eval::<i64>("inc(40)")?;
 
-    println!("Answer: {result}"); // prints 42
+    // println!("Answer: {result}"); // prints 42
 
-    engine.run(r#"log("value", 42)"#)?; // prints "value = 42"
+    // engine.run(r#"log("value", 42)"#)?; // prints "value = 42"
 
     // Compile to an AST and store it for later evaluations
     // let ast = engine.compile("40 + 2")?;
@@ -119,18 +121,92 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
         .register_fn("define_region", define_region)
         .register_fn("assign_constraint", assign_constraint)
         .register_fn("assign_constraint", assign_constraint_int)
+        .register_fn("assign_constraint", assign_constraint_cell_ce)
         .register_fn("assign_only", assign_only)
         .register_fn("assign_only", assign_only_int)
         .register_fn("set_gate", set_gate)
         .register_fn("+", operator_add)
+        .register_fn("+", operator_add_column)
+        .register_fn("+", operator_add_cell_column)
+        .register_fn("-", operator_minus_cell_column)
+        .register_fn("*", operator_mul_column_cell)
         .register_indexer_get(Column::get_field)
         // .register_indexer_set(TestStruct::set_field)
         ;
 
-    engine.run_file("rhai_script/fibonacci.plonk".into())?;
+    engine.run_file("rhai_script/fibonacci.rhai".into())?;
+
+    let mut scripts = Vec::<String>::new();
+    // scripts.push("let N = 10;".to_string());
+    if let Ok(lines) = read_lines("rhai_script/fibonacci.plonk") {
+        // Consumes the iterator, returns an (Optional) String
+        for line_result in lines {
+            if let Ok(line) = line_result {
+                // println!("{}", line);
+                scripts.push(format_code(line));
+            }
+        }
+    }
+
+    let script = scripts.join("\n");
+    println!("{}", script);
+
+    engine.run(script.as_str())?;
 
     // Done!
     Ok(())
+}
+
+fn format_code(line: String) -> String {
+    let reGate = Regex::new(
+        r"(?x)
+        gate\s(?<name>[\w\d]+)
+        \((?<parameters>
+        (?:\[[\w\d,\s]*\](?:,\s*)?){2}
+        )\)",
+    )
+    .unwrap();
+    // gate add([a, b, c], [s]) {
+    // fn add(a, b, c, s) {
+
+    let result = reGate.captures(&line);
+    if let Some(v) = result {
+        return format!(
+            "fn {}({}) {{",
+            &v["name"],
+            &v["parameters"]
+                .replace("[", "")
+                .replace("]", "")
+                .split(",")
+                .map(|x| x.trim())
+                .collect::<Vec<&str>>()
+                .join(", ")
+        );
+    }
+
+    let reGateReturn = Regex::new(
+        r"(?x)
+        return\s+<<(?<exp>.*)>>;",
+    )
+    .unwrap();
+    // return <<s * (a + b - c)>>; // a == a[0]
+    // set_gate(s * (a + b - c));
+
+    let result = reGateReturn.captures(&line);
+    if let Some(v) = result {
+        return format!("set_gate({});", &v["exp"],);
+    }
+
+    line
+    // return line;
+}
+
+fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
 }
 
 #[derive(Debug, Clone)]
@@ -159,31 +235,58 @@ struct Column {
     stype: SpecialType,
 }
 
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+struct Cell {
+    column: Column,
+    name: String,
+    index: i64,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+enum CellExpression {
+    Constant(i64),
+    CellValue(Cell),
+    Negated(Box<CellExpression>),
+    Product(Box<CellExpression>, Box<CellExpression>),
+    Sum(Box<CellExpression>, Box<CellExpression>),
+    Scaled(Box<CellExpression>, i64),
+}
+
 impl Column {
-    fn get_field(&mut self, index: i64) -> Column {
+    fn get_field(&mut self, index: i64) -> Cell {
         let name = format!("{}[{}]", self.name, index);
-        Column {
-            name: name,
-            ctype: self.ctype.clone(),
-            stype: SpecialType::Field,
+        Cell {
+            name,
+            index,
+            column: self.clone(),
         }
     }
 }
 
-fn init_input(v: &str) -> Column {
+fn init_input(v: &str) -> Cell {
     println!("init_input({})", v);
-    Column {
+    Cell {
         name: v.to_string(),
-        ctype: ColumnType::Instance,
-        stype: SpecialType::Input,
+        index: -1,
+        column: Column {
+            name: v.to_string(),
+            ctype: ColumnType::Instance,
+            stype: SpecialType::Input,
+        },
     }
 }
-fn init_output(v: String) -> Column {
+fn init_output(v: String) -> Cell {
     println!("init_output({})", v);
-    Column {
+    Cell {
         name: v.to_string(),
-        ctype: ColumnType::Instance,
-        stype: SpecialType::Input,
+        index: -1,
+        column: Column {
+            name: v.to_string(),
+            ctype: ColumnType::Instance,
+            stype: SpecialType::Output,
+        },
     }
 }
 fn init_advice_column(v: String) -> Column {
@@ -206,37 +309,108 @@ fn define_region(v: String) {
     println!("define_region({})", v);
     ()
 }
-fn assign_constraint(a: Column, b: Column) {
+// fn assign_constraint(a: Column, b: Column) {
+//     println!("assign_constraint({:?}, {:?})", a, b);
+//     ()
+// }
+fn assign_constraint(a: Cell, b: Cell) {
     println!("assign_constraint({:?}, {:?})", a, b);
     ()
 }
-fn assign_constraint_int(a: Column, b: i64) {
+fn assign_constraint_cell_ce(a: Cell, b: CellExpression) {
+    println!("assign_constraint({:?}, {:?})", a, b);
+    ()
+}
+// fn assign_constraint_int(a: Column, b: i64) {
+//     println!("assign_constraint({:?}, {})", a, b);
+//     ()
+// }
+fn assign_constraint_int(a: Cell, b: i64) {
     println!("assign_constraint({:?}, {})", a, b);
     ()
 }
-fn assign_only(a: Column, b: Column) {
+// fn assign_only(a: Column, b: Column) {
+//     println!("assign_only({:?}, {:?})", a, b);
+//     ()
+// }
+// fn assign_only_int(a: Column, b: i64) {
+//     println!("assign_only({:?}, {})", a, b);
+//     ()
+// }
+fn assign_only(a: Cell, b: Cell) {
     println!("assign_only({:?}, {:?})", a, b);
     ()
 }
-fn assign_only_int(a: Column, b: i64) {
+fn assign_only_int(a: Cell, b: i64) {
     println!("assign_only({:?}, {})", a, b);
     ()
 }
-fn set_gate(advices: Array, selectors: Array, a: String, b: String, c: String) {
-    println!(
-        "set_gate({:?}, {:?}, {}, {}, {})",
-        advices, selectors, a, b, c
-    );
+// fn set_gate(advices: Array, selectors: Array, exp: String) {
+//     println!("set_gate({:?}, {:?}, {})", advices, selectors, exp);
+//     ()
+// }
+// fn set_gate(exp: &dyn Fn(Dynamic) -> Column) {
+//     println!("set_gate()");
+//     ()
+// }
+fn set_gate(exp: CellExpression) {
+    println!("set_gate({:#?})", exp);
     ()
 }
-fn operator_add(a: Column, b: Column) -> Column {
-    println!("assign_constraint({:?}, {:?})", a, b);
-    let n = format!("{} + {}", a.name, b.name);
-    Column {
-        name: n,
-        ctype: ColumnType::Selector,
-        stype: SpecialType::None,
-    }
+fn operator_add(a: Cell, b: Cell) -> CellExpression {
+    println!("operator: {:?} + {:?}", a, b);
+    // let n = format!("{} + {}", a.name, b.name);
+    // Column {
+    //     name: n,
+    //     ctype: ColumnType::Selector,
+    //     stype: SpecialType::None,
+    // }
+    CellExpression::Sum(
+        Box::new(CellExpression::CellValue(a)),
+        Box::new(CellExpression::CellValue(b)),
+    )
+}
+fn operator_add_column(a: Column, b: Column) -> CellExpression {
+    println!("operator: {:?} + {:?}", a, b);
+    // let n = format!("{} + {}", a.name, b.name);
+    // Column {
+    //     name: n,
+    //     ctype: ColumnType::Selector,
+    //     stype: SpecialType::None,
+    // }
+    CellExpression::Sum(
+        Box::new(CellExpression::CellValue(a.clone().get_field(0))),
+        Box::new(CellExpression::CellValue(b.clone().get_field(0))),
+    )
+}
+fn operator_add_cell_column(a: CellExpression, b: Column) -> CellExpression {
+    println!("operator: {:?} + {:?}", a, b);
+    // let n = format!("{} + {}", a.name, b.name);
+    // Column {
+    //     name: n,
+    //     ctype: ColumnType::Selector,
+    //     stype: SpecialType::None,
+    // }
+    CellExpression::Sum(
+        Box::new(a),
+        Box::new(CellExpression::CellValue(b.clone().get_field(0))),
+    )
+}
+fn operator_minus_cell_column(a: CellExpression, b: Column) -> CellExpression {
+    println!("operator: {:?} - {:?}", a, b);
+    CellExpression::Sum(
+        Box::new(a),
+        Box::new(CellExpression::Negated(Box::new(
+            CellExpression::CellValue(b.clone().get_field(0)),
+        ))),
+    )
+}
+fn operator_mul_column_cell(a: Column, b: CellExpression) -> CellExpression {
+    println!("operator: {:?} * {:?}", a, b);
+    CellExpression::Product(
+        Box::new(CellExpression::CellValue(a.clone().get_field(0))),
+        Box::new(b),
+    )
 }
 
 /// Transcode the Rhai AST Node to uLisp
