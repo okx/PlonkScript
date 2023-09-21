@@ -2,8 +2,12 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
 
+use circuit::MyCircuit;
 use regex::Regex;
 use rhai::{ASTNode, Array, Engine, EvalAltResult, Position};
+
+// use super::circuit;
+mod circuit;
 
 // use rhai::{Dynamic, ImmutableString};
 
@@ -21,6 +25,13 @@ use rhai::{ASTNode, Array, Engine, EvalAltResult, Position};
 //     42_i64.into() // standard types can use '.into()'
 // }
 
+static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
+    columns: vec![],
+    signals: vec![],
+    regions: vec![],
+};
+
+#[allow(unreachable_code)]
 pub fn main() -> Result<(), Box<EvalAltResult>>
 //                          ^^^^^^^^^^^^^^^^^^
 //                          Rhai API error type
@@ -112,6 +123,7 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
     // ============================ here ===============================
     // engine.register_type_with_name::<TestStruct>("TestStruct")
     // .register_fn("new_ts", TestStruct::new)
+
     engine
         .register_type_with_name::<Column>("Column")
         .register_fn("init_input", init_input)
@@ -136,6 +148,12 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
 
     engine.run_file("rhai_script/fibonacci.rhai".into())?;
 
+    unsafe {
+        println!("{:#?}", CONTEXT);
+    }
+
+    return Ok(());
+
     let mut scripts = Vec::<String>::new();
     // scripts.push("let N = 10;".to_string());
     if let Ok(lines) = read_lines("rhai_script/fibonacci.plonk") {
@@ -153,8 +171,44 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
 
     engine.run(script.as_str())?;
 
-    // Done!
+    run_prover(
+        4,
+        unsafe { CONTEXT.clone() },
+        vec![
+            halo2_proofs::pasta::Fp::from(1),
+            halo2_proofs::pasta::Fp::from(1),
+            halo2_proofs::pasta::Fp::from(54),
+        ],
+    );
+
     Ok(())
+}
+
+fn run_prover(k: u32, scs: SimplifiedConstraitSystem, public_input: Vec<halo2_proofs::pasta::Fp>) {
+    // let k = 4;
+
+    // let a = Fp::from(1); // F[0]
+    // let b = Fp::from(1); // F[1]
+    // let out = Fp::from(1393); // F[9]
+
+    let circuit = MyCircuit {
+        scs,
+        _marker: std::marker::PhantomData,
+    };
+
+    // let mut public_input = vec![a, b, out];
+
+    let prover =
+        halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]).unwrap();
+
+    let d = format!("{:#?}", prover);
+    let mut file = std::fs::File::create(
+        "/Users/oker/2-Project/02-zkkyc/halo2visualizer/packages/cli/src/input.rust",
+    )
+    .unwrap();
+    std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+
+    prover.assert_satisfied();
 }
 
 fn format_code(line: String) -> String {
@@ -265,9 +319,43 @@ impl Column {
     }
 }
 
+#[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
+pub struct SimplifiedConstraitSystem {
+    signals: Vec<Cell>,
+    columns: Vec<Column>,
+    regions: Vec<Region>,
+}
+
+#[derive(Debug, Clone, Default)]
+#[allow(dead_code)]
+struct Region {
+    name: String,
+    instructions: Vec<Instruction>,
+}
+
+#[derive(Debug, Clone)]
+#[allow(dead_code)]
+enum Instruction {
+    // CopyAdvice(),
+    EnableSelector(),                             // selector, row(offset)
+    AssignAdvice(i64, i64, CellExpression),       // advice, adv_row(offset), value expression
+    AssignAdviceFromConstant(i64, i64, i64),      // advice, adv_row(offset), constant
+    AssignAdviceFromInstance(i64, i64, i64, i64), // instance, ins_row, advice, adv_row(offset)
+    // AssignFixed(i64, i64, CellExpression),       // fixed, fix_row(offset), value expression
+    ConstrainEqual(),    //
+    ConstrainConstant(), //
+}
+
+impl SimplifiedConstraitSystem {
+    // pub fn new() -> SimplifiedConstraitSystem {
+    //     SimplifiedConstraitSystem { columns: vec![] }
+    // }
+}
+
 fn init_input(v: &str) -> Cell {
     println!("init_input({})", v);
-    Cell {
+    let cell = Cell {
         name: v.to_string(),
         index: -1,
         column: Column {
@@ -275,11 +363,15 @@ fn init_input(v: &str) -> Cell {
             ctype: ColumnType::Instance,
             stype: SpecialType::Input,
         },
+    };
+    unsafe {
+        CONTEXT.signals.push(cell.clone());
     }
+    cell
 }
 fn init_output(v: String) -> Cell {
     println!("init_output({})", v);
-    Cell {
+    let cell = Cell {
         name: v.to_string(),
         index: -1,
         column: Column {
@@ -287,23 +379,35 @@ fn init_output(v: String) -> Cell {
             ctype: ColumnType::Instance,
             stype: SpecialType::Output,
         },
+    };
+    unsafe {
+        CONTEXT.signals.push(cell.clone());
     }
+    cell
 }
 fn init_advice_column(v: String) -> Column {
     println!("init_advice_column({})", v);
-    Column {
+    let col = Column {
         name: v.to_string(),
         ctype: ColumnType::Advice,
         stype: SpecialType::None,
+    };
+    unsafe {
+        CONTEXT.columns.push(col.clone());
     }
+    col
 }
 fn init_selector_column(v: String) -> Column {
     println!("init_selector_column({})", v);
-    Column {
+    let col = Column {
         name: v.to_string(),
         ctype: ColumnType::Selector,
         stype: SpecialType::None,
+    };
+    unsafe {
+        CONTEXT.columns.push(col.clone());
     }
+    col
 }
 fn define_region(v: String) {
     println!("define_region({})", v);

@@ -1,38 +1,35 @@
-// (advices, selector, instance)
-chip FibonacciChip([a, b, c], [s], [i]) {
-}
-
-// (advices, selector), ?fixed?
 gate add([a, b, c], [s]) {
     return <<s * (a + b - c)>>; // a == a[0]
 }
 
-circuit main(N) {
-    public input in1;
-    public input in2;
-    public output out;
+let N = 10;
 
-    private advice a;
-    private advice b;
-    private advice c;
+public input in1;
+public input in2;
+public output out;
 
-    public selector s;
+private advice a;
+private advice b;
+private advice c;
 
-    add([a, b, c], [s]);
+public selector s;
 
-    #region: first row
-    a[0] <== in1;
-    b[0] <== in2;
+add([a, b, c], [s]);
 
-    #region: next row
-    for (var i = 0; i < N; i++) {
-        c[i] <== a[i] + b[i];
-        if (i > 0) {
-            a[i] <== b[i - 1];
-            b[i] <== c[i - 1];
-        }
-        s[i] <-- 1;
+#region: first row
+a[0] <== in1;
+b[0] <== in2;
+
+#region: next row
+for i in 0..N {
+    c[i] <== a[i] + b[i];
+    if (i > 0) {
+        a[i] <== b[i - 1];
+        b[i] <== c[i - 1];
     }
-
-    out <== c[N-1];
+    s[i] <-- 1;
 }
+
+out <== c[N-1];
+
+
