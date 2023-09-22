@@ -47,10 +47,10 @@ impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
         let scs = unsafe { CONTEXT.clone() };
         for col in scs.columns {
             match col.ctype {
-                crate::engine::ColumnType::Advice => advices.push(meta.advice_column()),
-                crate::engine::ColumnType::Selector => selectors.push(meta.selector()),
-                crate::engine::ColumnType::Fixed => fixeds.push(meta.fixed_column()),
-                crate::engine::ColumnType::Instance => instances.push(meta.instance_column()),
+                crate::system::ColumnType::Advice => advices.push(meta.advice_column()),
+                crate::system::ColumnType::Selector => selectors.push(meta.selector()),
+                crate::system::ColumnType::Fixed => fixeds.push(meta.fixed_column()),
+                crate::system::ColumnType::Instance => instances.push(meta.instance_column()),
             }
         }
 

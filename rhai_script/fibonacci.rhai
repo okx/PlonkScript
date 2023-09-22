@@ -3,7 +3,7 @@
 //     return <<s * (a + b - c)>>; // a == a[0]
 // }
 
-let N = 10;
+let N = 2;
 fn add(a, b, c, s) {
     set_gate(s * (a + b - c));
 }
@@ -47,7 +47,7 @@ fn add(a, b, c, s) {
             assign_constraint(b[i], c[i - 1]);
         }
         // s[i] <-- 1;
-        assign_only(s[i], 1);
+        enable_selector(s[i]);
     }
 
     // out <== c[N-1];

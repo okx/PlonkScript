@@ -32,9 +32,11 @@ mod system;
 
 static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     // ..Default::default()
-     signals: Vec::new(),
-     columns: Vec::new(),
-     regions: Vec::new(),
+    signals: Vec::new(),
+    columns: Vec::new(),
+    regions: Vec::new(),
+    gates: Vec::new(),
+    instance_count: 0,
 };
 
 #[allow(unreachable_code)]
@@ -42,46 +44,46 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
 //                          ^^^^^^^^^^^^^^^^^^
 //                          Rhai API error type
 {
-    // Create an 'Engine'
-    let engine = Engine::new();
+    // // Create an 'Engine'
+    // let engine = Engine::new();
 
-    // Your first Rhai Script
-    let script = "print(40 + 2);";
+    // // Your first Rhai Script
+    // let script = "print(40 + 2);";
 
-    // Run the script - prints "42"
-    engine.run(script)?;
+    // // Run the script - prints "42"
+    // engine.run(script)?;
 
-    let result = engine.eval::<i64>("40 + 2")?;
-    //                      ^^^^^^^ required: cast the result to a type
+    // let result = engine.eval::<i64>("40 + 2")?;
+    // //                      ^^^^^^^ required: cast the result to a type
 
-    println!("Answer: {result}"); // prints 42
+    // println!("Answer: {result}"); // prints 42
 
-    let result = engine.eval_file::<i64>("rhai_script/hello_world.rhai".into())?;
-    //                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
-    //                                   a 'PathBuf' is needed
-    println!("Answer: {result}"); // prints 42
+    // let result = engine.eval_file::<i64>("rhai_script/hello_world.rhai".into())?;
+    // //                                   ^^^^^^^^^^^^^^^^^^^^^^^^^
+    // //                                   a 'PathBuf' is needed
+    // println!("Answer: {result}"); // prints 42
 
-    // Running a script file also works in a similar manner
-    engine.run_file("rhai_script/hello_world.rhai".into())?;
+    // // Running a script file also works in a similar manner
+    // engine.run_file("rhai_script/hello_world.rhai".into())?;
 
-    let re = Regex::new(
-        r"(?x)
-    (?P<year>\d{4})  # the year
-    -
-    (?P<month>\d{2}) # the month
-    -
-    (?P<day>\d{2})   # the day
-    ",
-    )
-    .unwrap();
+    // let re = Regex::new(
+    //     r"(?x)
+    // (?P<year>\d{4})  # the year
+    // -
+    // (?P<month>\d{2}) # the month
+    // -
+    // (?P<day>\d{2})   # the day
+    // ",
+    // )
+    // .unwrap();
 
-    let caps = re.captures("2010-03-14").unwrap();
-    assert_eq!("2010", &caps["year"]);
-    assert_eq!("03", &caps["month"]);
-    assert_eq!("14", &caps["day"]);
+    // let caps = re.captures("2010-03-14").unwrap();
+    // assert_eq!("2010", &caps["year"]);
+    // assert_eq!("03", &caps["month"]);
+    // assert_eq!("14", &caps["day"]);
 
-    let result = re.replace_all("2023-09-07,2023-09-08", "$year:$month:$day");
-    println!("{}", result);
+    // let result = re.replace_all("2023-09-07,2023-09-08", "$year:$month:$day");
+    // println!("{}", result);
 
     let mut engine = Engine::new();
 
@@ -134,9 +136,12 @@ pub fn main() -> Result<(), Box<EvalAltResult>>
 
     engine.run_file("rhai_script/fibonacci.rhai".into())?;
 
-    unsafe {
-        println!("{:#?}", CONTEXT);
-    }
+    // unsafe {
+    //     println!("{:#?}", CONTEXT);
+    // }
+    let d = unsafe { format!("{:#?}", CONTEXT) };
+    let mut file = std::fs::File::create("out.rust").unwrap();
+    std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
 
     return Ok(());
 
