@@ -1,54 +1,77 @@
-// (advices, selector), ?fixed?
-gate add([a, b, c], [s]) {
-    return <<s * (a + b - c)>>; // a == a[0]
+gate add(a, b, c, s) {
+    s <| a + b - c;
 }
-// fn add(advices, selectors) {
-//     set_gate(advices, selectors,"[a, b, c]", "[s]", "s * (a + b - c)");
-// }
 
-let N = 10;
-// circuit main(N) {
-    public input in1;
-    public input in2;
-    public output out;
-    // let in1 = init_input("in1");
-    // let in2 = init_input("in2");
-    // let out = init_output("out");
 
-    private advice a;
-    private advice b;
-    private advice c;
-    // let a = init_advice_column("a");
-    // let b = init_advice_column("b");
-    // let c = init_advice_column("c");
+// method 1
 
-    public selector s;
-    // let s = init_selector_column("s");
-
-    add([a, b, c], [s]);
-
-    #region: first row
-    // define_region("first row");
+componenent first_row(a, b, c, s, in1, in2) {
     a[0] <== in1;
     b[0] <== in2;
-    // assign_constraint(a[0], in1);
-    // assign_constraint(b[0], in2);
+    c[0] <== a[0] + b[0];
+    s[0] <-- enable;
 
-    #region: next row
-    // define_region("next row");
-    for i in 0..N {
-        c[i] <== a[i] + b[i];
-        // assign_constraint(c[i], a[i] + b[i]);
-        if (i > 0) {
-            a[i] <== b[i - 1];
-            b[i] <== c[i - 1];
-            // assign_constraint(a[i], b[i - 1]);
-            // assign_constraint(b[i], c[i - 1]);
-        }
-        s[i] <-- 1;
-        // assign_only(s[i], 1);
+    (b[0], c[0])
+}
+
+componenent next_row(a, b, c, s, last_b, last_c) {
+    a[0] <== last_b;
+    b[0] <== last_c;
+    c[0] <== a[0] + b[0];
+    s[0] <-- enable;
+
+    c[0]
+}
+
+let N = 10;
+
+public input in1;
+public input in2;
+public output out;
+
+private advice a;
+private advice b;
+private advice c;
+
+public selector s;
+
+add(a, b, c, s);
+let (last_b, last_c) = first_row(a, b, c, s, in1, in2);
+for i in 0..N {
+    let last_c = next_row(a, b, c, s, last_b, last_c);
+}
+
+out <== c[N-1];
+
+
+
+
+// method 2
+
+let N = 10;
+
+public input in1;
+public input in2;
+public output out;
+
+private advice a;
+private advice b;
+private advice c;
+
+public selector s;
+
+add([a, b, c], [s]);
+
+a[0] <== in1;
+b[0] <== in2;
+
+for i in 0..N {
+    c[i] <== a[i] + b[i];
+    if (i > 0) {
+        a[i] <== b[i - 1];
+        b[i] <== c[i - 1];
     }
+    s[i] <-- 1;
+}
 
-    out <== c[N-1];
-    // assign_constraint(out, c[N-1]);
-// }
+out <== c[N-1];

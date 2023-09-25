@@ -1,3 +1,5 @@
+use std::{cell, collections::HashMap};
+
 use crate::{system::*, CONTEXT};
 
 pub const DEFAULT_INSTANCE_COLUMN_NAME: &str = "defins";
@@ -11,8 +13,13 @@ impl EngineExt for rhai::Engine {
     fn register_plonk_script(&mut self) {
         let _ = &mut self
         .register_type_with_name::<Column>("Column")
+        .register_indexer_get(Column::get_field)
+        .register_indexer_set(Column::set_field)
+        .register_type_with_name::<Cell>("Cell")
+        .register_get("value",Cell::get_value)
         .register_fn("init_input", init_input)
         .register_fn("init_output", init_output)
+        .register_fn("set_output", set_output)
         .register_fn("init_advice_column", init_advice_column)
         .register_fn("init_selector_column", init_selector_column)
         .register_fn("define_region", define_region)
@@ -29,7 +36,6 @@ impl EngineExt for rhai::Engine {
         .register_fn("+", operator_add_cell_column)
         .register_fn("-", operator_minus_cell_column)
         .register_fn("*", operator_mul_column_cell)
-        .register_indexer_get(Column::get_field)
         // .register_indexer_set(TestStruct::set_field)
         ;
     }
@@ -38,11 +44,33 @@ impl EngineExt for rhai::Engine {
 impl Column {
     fn get_field(&mut self, index: i64) -> Cell {
         let name = format!("{}[{}]", self.name, index);
+        if self.cells.contains_key(&name) {
+            return self.cells[&name].clone();
+        }
+
         Cell {
             name,
             index,
+            value: Some("0".to_string()),
             column: self.clone(),
         }
+    }
+    fn set_field(&mut self, index: i64, value: Cell) {
+        let name = format!("{}[{}]", self.name, index);
+        let cell = Cell {
+            name: name.clone(),
+            index,
+            value: value.value,
+            ..value
+        };
+        let entry = self.cells.entry(name).or_insert(cell.clone()); //.and_modify(||cell);
+        *entry = cell;
+    }
+}
+
+impl Cell {
+    fn get_value(&mut self) -> String {
+        self.value.clone().unwrap()
     }
 }
 
@@ -57,10 +85,12 @@ fn init_input(v: &str) -> Cell {
     let cell = Cell {
         name: v.to_string(),
         index: get_lastest_instance_index(),
+        value: unsafe { Some(CONTEXT.inputs[v].clone()) },
         column: Column {
             name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Input,
+            cells: HashMap::new(),
         },
     };
     unsafe {
@@ -73,10 +103,12 @@ fn init_output(v: String) -> Cell {
     let cell = Cell {
         name: v.to_string(),
         index: get_lastest_instance_index(),
+        value: None,
         column: Column {
             name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Output,
+            cells: HashMap::new(),
         },
     };
     unsafe {
@@ -84,12 +116,20 @@ fn init_output(v: String) -> Cell {
     }
     cell
 }
+fn set_output(name: String, cell: Cell) {
+    unsafe {
+        if let Some(pos) = CONTEXT.signals.iter().position(|x| x.name == name) {
+            CONTEXT.signals.splice(pos..(pos + 1), vec![cell]);
+        }
+    }
+}
 fn init_advice_column(v: String) -> Column {
     // println!("init_advice_column({})", v);
     let col = Column {
         name: v.to_string(),
         ctype: ColumnType::Advice,
         stype: SpecialType::None,
+        cells: HashMap::new(),
     };
     unsafe {
         CONTEXT.columns.push(col.clone());
@@ -102,6 +142,7 @@ fn init_selector_column(v: String) -> Column {
         name: v.to_string(),
         ctype: ColumnType::Selector,
         stype: SpecialType::None,
+        cells: HashMap::new(),
     };
     unsafe {
         CONTEXT.columns.push(col.clone());
@@ -124,26 +165,30 @@ fn define_region(v: String) {
 // }
 
 // a <== b
-fn assign_constraint(a: Cell, b: Cell) {
+fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
     // println!("assign_constraint({:?}, {:?})", a, b);
+    a.value = b.value.clone();
     push_instruction_to_last_region(match (a.column.ctype, b.column.ctype) {
         (ColumnType::Advice, ColumnType::Instance) => {
-            vec![Instruction::AssignAdviceFromInstance(a, b)]
+            vec![Instruction::AssignAdviceFromInstance(a.clone(), b)]
         }
         (ColumnType::Instance, ColumnType::Advice) => {
-            vec![Instruction::AssignAdviceFromInstance(b, a)]
+            vec![Instruction::AssignAdviceFromInstance(b, a.clone())]
         }
         (_, _) => vec![
             Instruction::AssignAdvice(a.clone(), CellExpression::CellValue(b.clone())),
-            Instruction::ConstrainEqual(a, b),
+            Instruction::ConstrainEqual(a.clone(), b),
         ],
     });
+    a.clone()
 }
 
 // a <== b (b is expresion, e.g. b1 + b2)
-fn assign_constraint_cell_ce(a: Cell, b: CellExpression) {
+fn assign_constraint_cell_ce(a: &mut Cell, b: CellExpression) -> Cell {
     // println!("assign_constraint({:?}, {:?})", a, b);
-    push_instruction_to_last_region(vec![Instruction::AssignAdvice(a, b)]);
+    a.value = convert_to_value(b.clone());
+    push_instruction_to_last_region(vec![Instruction::AssignAdvice(a.clone(), b)]);
+    a.clone()
 }
 fn push_instruction_to_last_region(a: Vec<Instruction>) {
     if let Some(region) = unsafe { CONTEXT.regions.last_mut() } {
@@ -176,10 +221,13 @@ fn push_instruction_to_last_region(a: Vec<Instruction>) {
 //     println!("assign_only({:?}, {:?})", a, b);
 //     ()
 // }
-fn enable_selector(a: Cell) {
+fn enable_selector(a: &mut Cell) {
     // println!("enable_selector({:?})", a);
+    a.value = Some("1".to_string());
     if let Some(region) = unsafe { CONTEXT.regions.last_mut() } {
-        region.instructions.push(Instruction::EnableSelector(a));
+        region
+            .instructions
+            .push(Instruction::EnableSelector(a.clone()));
     }
 }
 // fn assign_only_int(a: Cell, b: i64) {
@@ -251,4 +299,28 @@ fn operator_mul_column_cell(a: Column, b: CellExpression) -> CellExpression {
         Box::new(CellExpression::CellValue(a.clone().get_field(0))),
         Box::new(b),
     )
+}
+
+fn convert_to_value(exp: CellExpression) -> Option<String> {
+    match exp {
+        CellExpression::Constant(c) => Some(c.to_string()),
+        CellExpression::CellValue(c) => match c.column.ctype {
+            crate::system::ColumnType::Selector => todo!(),
+            crate::system::ColumnType::Advice => c.value,
+            crate::system::ColumnType::Fixed => todo!(),
+            crate::system::ColumnType::Instance => todo!(),
+        },
+        CellExpression::Negated(n) => convert_to_value(*n),
+        CellExpression::Product(a, b) => Some(
+            (convert_to_value(*a).unwrap().parse::<i64>().unwrap()
+                * convert_to_value(*b).unwrap().parse::<i64>().unwrap())
+            .to_string(),
+        ),
+        CellExpression::Sum(a, b) => Some(
+            (convert_to_value(*a).unwrap().parse::<i64>().unwrap()
+                + convert_to_value(*b).unwrap().parse::<i64>().unwrap())
+            .to_string(),
+        ),
+        CellExpression::Scaled(_, _) => todo!(),
+    }
 }

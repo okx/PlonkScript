@@ -4,7 +4,8 @@ fn add(a, b, c, s) {
     set_gate("add", s, a + b - c);
 }
 
-let N = 8;
+let N = 10;
+define_region("default");
 
 // circuit main(N) {
     // public input in1;
@@ -27,27 +28,29 @@ let N = 8;
     add(a, b, c, s);
 
     // #region: first row
-    define_region("first row");
+    // define_region("first row");
     // a[0] <== in1;
     // b[0] <== in2;
-    assign_constraint(a[0], in1);
-    assign_constraint(b[0], in2);
-    assign_constraint(c[0], a[0] + b[0]);
-    enable_selector(s[0]);
+    a[0] = assign_constraint(a[0], in1);
+    b[0] = assign_constraint(b[0], in2);
 
     // #region: next row
     // define_region("next row");
-    for i in 1..N {
+    for i in 0..N {
+        if i > 0 {
             // a[i] <== b[i - 1];
             // b[i] <== c[i - 1];
-            assign_constraint(a[i], b[i - 1]);
-            assign_constraint(b[i], c[i - 1]);
+            a[i] = assign_constraint(a[i], b[i - 1]);
+            b[i] = assign_constraint(b[i], c[i - 1]);
+        }
         // c[i] <== a[i] + b[i];
-        assign_constraint(c[i], a[i] + b[i]);
-        // s[i] <-- 1;
+        c[i] = assign_constraint(c[i], a[i] + b[i]);
+        // s[i] <-- enable;
         enable_selector(s[i]);
     }
 
     // out <== c[N-1];
-    assign_constraint(out, c[N-1]);
+    out = assign_constraint(out, c[N-1]);
 // }
+
+set_output("out", out);

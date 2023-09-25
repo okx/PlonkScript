@@ -1,6 +1,5 @@
-use std::any::Any;
-
-use halo2_proofs::{arithmetic::Field, circuit::AssignedCell};
+use std::{ collections::HashMap, fmt};
+use once_cell::sync::Lazy;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
@@ -20,12 +19,24 @@ pub enum SpecialType {
     None,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 #[allow(dead_code)]
 pub struct Column {
     pub name: String,
     pub ctype: ColumnType,
     pub stype: SpecialType,
+    pub cells: HashMap<String, Cell>,
+}
+
+// Debug
+impl fmt::Debug for Column {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Column")
+            .field("name", &self.name)
+            .field("ctype", &self.ctype)
+            .field("stype", &self.stype)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -33,6 +44,7 @@ pub struct Column {
 pub struct Cell {
     pub column: Column,
     pub name: String,
+    pub value: Option<String>,
     pub index: i64,
 }
 
@@ -55,6 +67,7 @@ pub struct SimplifiedConstraitSystem {
     pub regions: Vec<Region>,
     pub instance_count: i64,
     pub gates: Vec<(String, CellExpression)>,
+    pub inputs: Lazy<HashMap<String, String>>,
 }
 
 #[derive(Debug, Clone, Default)]

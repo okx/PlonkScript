@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
@@ -9,6 +10,7 @@ use rhai::{Engine, EvalAltResult};
 use system::SimplifiedConstraitSystem;
 
 use crate::engine::EngineExt;
+use once_cell::sync::Lazy;
 
 mod circuit;
 mod engine;
@@ -20,6 +22,7 @@ static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     columns: Vec::new(),
     regions: Vec::new(),
     gates: Vec::new(),
+    inputs: Lazy::new(|| HashMap::new()),
     instance_count: 0,
 };
 
@@ -28,6 +31,11 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
     let mut engine = Engine::new();
 
     engine.register_plonk_script();
+
+    unsafe {
+        CONTEXT.inputs.insert("in1".to_string(), "1".to_string());
+        CONTEXT.inputs.insert("in2".to_string(), "1".to_string());
+    }
 
     engine.run_file("rhai_script/fibonacci.rhai".into())?;
 
@@ -55,15 +63,12 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
         engine.run(script.as_str())?;
     }
 
-    run_prover(
-        4,
-        // unsafe { CONTEXT },
-        vec![
-            halo2_proofs::pasta::Fp::from(1),
-            halo2_proofs::pasta::Fp::from(1),
-            halo2_proofs::pasta::Fp::from(55),
-        ],
-    );
+    let public_input = unsafe { CONTEXT.signals.clone() }
+        .into_iter()
+        .map(|x| halo2_proofs::pasta::Fp::from(x.value.unwrap().parse::<u64>().unwrap()))
+        .collect();
+
+    run_prover(4, public_input);
 
     Ok(())
 }
