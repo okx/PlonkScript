@@ -3,7 +3,7 @@
 //     return <<s * (a + b - c)>>; // a == a[0]
 // }
 
-let N = 9;
+let N = 8;
 fn add(a, b, c, s) {
     set_gate(s * (a + b - c));
 }
@@ -38,7 +38,7 @@ fn add(a, b, c, s) {
     enable_selector(s[0]);
 
     // #region: next row
-    define_region("next row");
+    // define_region("next row");
     for i in 1..N {
             // a[i] <== b[i - 1];
             // b[i] <== c[i - 1];

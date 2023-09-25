@@ -183,11 +183,9 @@ impl<F: PrimeField> CommonConfig<F> {
     fn get_assigned_cell(&self, name: String) -> AssignedCell<F, F> {
         if let Some(acell) = self
             .acells
-            .clone()
             .iter()
             .filter(|x| x.0 == name)
             .nth(0)
-            .clone()
         {
             return acell.1.clone();
         }

@@ -61,7 +61,7 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
         vec![
             halo2_proofs::pasta::Fp::from(1),
             halo2_proofs::pasta::Fp::from(1),
-            halo2_proofs::pasta::Fp::from(89),
+            halo2_proofs::pasta::Fp::from(55),
         ],
     );
 
@@ -86,19 +86,22 @@ fn run_prover(
 
     // let mut public_input = vec![a, b, out];
 
-    let prover =
-        halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]).unwrap();
+    let presult = halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]);
 
-    let d = format!("{:#?}", prover);
-    let mut file = std::fs::File::create(
-        "/Users/oker/2-Project/02-zkkyc/halo2visualizer/packages/cli/src/input.rust",
-    )
-    .unwrap();
-    // let mut file = std::fs::File::create("prover_out.rust").unwrap();
-    std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+    if let Ok(prover) = presult {
+        let d = format!("{:#?}", prover);
+        let mut file = std::fs::File::create(
+            "/Users/oker/2-Project/02-zkkyc/halo2visualizer/packages/cli/src/input.rust",
+        )
+        .unwrap();
+        // let mut file = std::fs::File::create("prover_out.rust").unwrap();
+        std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
 
-    prover.assert_satisfied();
-    println!("run");
+        prover.assert_satisfied();
+        println!("prove completed");
+    } else {
+        println!("{:?}", presult.err());
+    }
 }
 
 fn format_code(line: String) -> String {
