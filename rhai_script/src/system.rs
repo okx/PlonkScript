@@ -54,7 +54,7 @@ pub struct SimplifiedConstraitSystem {
     pub columns: Vec<Column>,
     pub regions: Vec<Region>,
     pub instance_count: i64,
-    pub gates: Vec<CellExpression>,
+    pub gates: Vec<(String, CellExpression)>,
 }
 
 #[derive(Debug, Clone, Default)]

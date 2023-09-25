@@ -22,6 +22,7 @@ impl EngineExt for rhai::Engine {
         // .register_fn("assign_only", assign_only)
         // .register_fn("assign_only", assign_only_int)
         .register_fn("set_gate", set_gate)
+        .register_fn("set_gate", set_gate_col_ce)
         .register_fn("enable_selector", enable_selector)
         .register_fn("+", operator_add)
         .register_fn("+", operator_add_column)
@@ -193,10 +194,25 @@ fn enable_selector(a: Cell) {
 //     println!("set_gate()");
 //     ()
 // }
-fn set_gate(exp: CellExpression) {
+fn set_gate_col_ce(name: String, selector: Column, exp: CellExpression) {
     // println!("set_gate({:#?})", exp);
     unsafe {
-        CONTEXT.gates.push(exp);
+        CONTEXT.gates.push((
+            name,
+            CellExpression::Product(
+                Box::new(CellExpression::CellValue(selector.clone().get_field(0))),
+                Box::new(exp),
+            ),
+        ));
+    }
+}
+fn set_gate(name: String, selector: CellExpression, exp: CellExpression) {
+    // println!("set_gate({:#?})", exp);
+    unsafe {
+        CONTEXT.gates.push((
+            name,
+            CellExpression::Product(Box::new(selector), Box::new(exp)),
+        ));
     }
 }
 fn operator_add(a: Cell, b: Cell) -> CellExpression {

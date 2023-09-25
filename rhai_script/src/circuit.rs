@@ -86,9 +86,9 @@ impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
 
         // build gates
         let sgates = unsafe { CONTEXT.gates.clone() };
-        for g in sgates {
-            meta.create_gate("unknown", |meta| {
-                vec![convert_to_gate_expression(meta, config.clone(), g)]
+        for (gname, gate) in sgates {
+            meta.create_gate(Box::leak(gname.into_boxed_str()), |meta| {
+                vec![convert_to_gate_expression(meta, config.clone(), gate)]
             });
         }
 

@@ -1,12 +1,10 @@
-// (advices, selector), ?fixed?
 // gate add(a, b, c, s) {
-//     return <<s * (a + b - c)>>; // a == a[0]
-// }
+fn add(a, b, c, s) {
+    // s <| a + b - c;
+    set_gate("add", s, a + b - c);
+}
 
 let N = 8;
-fn add(a, b, c, s) {
-    set_gate(s * (a + b - c));
-}
 
 // circuit main(N) {
     // public input in1;
