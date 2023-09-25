@@ -46,13 +46,6 @@ pub enum CellExpression {
     Sum(Box<CellExpression>, Box<CellExpression>),
     Scaled(Box<CellExpression>, i64),
 }
-// trait MyTrait: std::any::Any + std::marker::Copy {}
-// trait MyTrait:Any+ Copy{
-//     fn do_something(&self) -> Box<dyn MyTrait>;
-// }
-
-// impl<T: std::any::Any + std::marker::Copy> MyTrait for T {}
-// pub trait FieldTrait: Field  {}
 
 #[derive(Debug, Default)]
 #[allow(dead_code)]
@@ -62,9 +55,6 @@ pub struct SimplifiedConstraitSystem {
     pub regions: Vec<Region>,
     pub instance_count: i64,
     pub gates: Vec<CellExpression>,
-    // pub acells: Vec<(String, Box<dyn MyTrait>)>,
-    // pub acells: Vec<(String, Box<AssignedCell<dyn Field,dyn Field>>)>,
-    // pub acells: Vec<(String, Box<dyn FieldTrait>)>,
 }
 
 #[derive(Debug, Clone, Default)]

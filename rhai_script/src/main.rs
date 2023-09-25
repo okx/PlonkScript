@@ -20,7 +20,6 @@ static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     columns: Vec::new(),
     regions: Vec::new(),
     gates: Vec::new(),
-    // acells: Vec::new(),
     instance_count: 0,
 };
 
@@ -62,7 +61,7 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
         vec![
             halo2_proofs::pasta::Fp::from(1),
             halo2_proofs::pasta::Fp::from(1),
-            halo2_proofs::pasta::Fp::from(54),
+            halo2_proofs::pasta::Fp::from(89),
         ],
     );
 

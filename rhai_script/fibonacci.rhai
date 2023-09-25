@@ -3,7 +3,7 @@
 //     return <<s * (a + b - c)>>; // a == a[0]
 // }
 
-let N = 3;
+let N = 9;
 fn add(a, b, c, s) {
     set_gate(s * (a + b - c));
 }
@@ -34,16 +34,16 @@ fn add(a, b, c, s) {
     // b[0] <== in2;
     assign_constraint(a[0], in1);
     assign_constraint(b[0], in2);
+    assign_constraint(c[0], a[0] + b[0]);
+    enable_selector(s[0]);
 
     // #region: next row
     define_region("next row");
-    for i in 0..N {
-        if (i > 0) {
+    for i in 1..N {
             // a[i] <== b[i - 1];
             // b[i] <== c[i - 1];
             assign_constraint(a[i], b[i - 1]);
             assign_constraint(b[i], c[i - 1]);
-        }
         // c[i] <== a[i] + b[i];
         assign_constraint(c[i], a[i] + b[i]);
         // s[i] <-- 1;

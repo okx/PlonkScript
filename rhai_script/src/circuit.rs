@@ -31,6 +31,7 @@ pub struct CommonConfig<F: PrimeField> {
 impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
     type Config = CommonConfig<F>;
     type FloorPlanner = V1;
+    // type FloorPlanner = SimpleFloorPlanner;
 
     fn without_witnesses(&self) -> Self {
         Self::default()
