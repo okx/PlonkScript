@@ -3,6 +3,7 @@ use std::io::{self, BufRead};
 use std::path::Path;
 
 use circuit::MyCircuit;
+use halo2_proofs::arithmetic::Field;
 use regex::Regex;
 use rhai::{Engine, EvalAltResult};
 use system::SimplifiedConstraitSystem;
@@ -19,6 +20,7 @@ static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     columns: Vec::new(),
     regions: Vec::new(),
     gates: Vec::new(),
+    // acells: Vec::new(),
     instance_count: 0,
 };
 
@@ -34,28 +36,29 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
     let mut file = std::fs::File::create("out.rust").unwrap();
     std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
 
-    return Ok(());
-
-    let mut scripts = Vec::<String>::new();
-    // scripts.push("let N = 10;".to_string());
-    if let Ok(lines) = read_lines("rhai_script/fibonacci.plonk") {
-        // Consumes the iterator, returns an (Optional) String
-        for line_result in lines {
-            if let Ok(line) = line_result {
-                // println!("{}", line);
-                scripts.push(format_code(line));
+    let num = 0;
+    if num == 1 {
+        let mut scripts = Vec::<String>::new();
+        // scripts.push("let N = 10;".to_string());
+        if let Ok(lines) = read_lines("rhai_script/fibonacci.plonk") {
+            // Consumes the iterator, returns an (Optional) String
+            for line_result in lines {
+                if let Ok(line) = line_result {
+                    // println!("{}", line);
+                    scripts.push(format_code(line));
+                }
             }
         }
+
+        let script = scripts.join("\n");
+        println!("{}", script);
+
+        engine.run(script.as_str())?;
     }
-
-    let script = scripts.join("\n");
-    println!("{}", script);
-
-    engine.run(script.as_str())?;
 
     run_prover(
         4,
-        unsafe { CONTEXT.clone() },
+        // unsafe { CONTEXT },
         vec![
             halo2_proofs::pasta::Fp::from(1),
             halo2_proofs::pasta::Fp::from(1),
@@ -66,7 +69,11 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
     Ok(())
 }
 
-fn run_prover(k: u32, scs: SimplifiedConstraitSystem, public_input: Vec<halo2_proofs::pasta::Fp>) {
+fn run_prover(
+    k: u32,
+    //  scs: SimplifiedConstraitSystem,
+    public_input: Vec<halo2_proofs::pasta::Fp>,
+) {
     // let k = 4;
 
     // let a = Fp::from(1); // F[0]
@@ -74,7 +81,7 @@ fn run_prover(k: u32, scs: SimplifiedConstraitSystem, public_input: Vec<halo2_pr
     // let out = Fp::from(1393); // F[9]
 
     let circuit = MyCircuit {
-        scs,
+        // scs,
         _marker: std::marker::PhantomData,
     };
 
@@ -88,9 +95,11 @@ fn run_prover(k: u32, scs: SimplifiedConstraitSystem, public_input: Vec<halo2_pr
         "/Users/oker/2-Project/02-zkkyc/halo2visualizer/packages/cli/src/input.rust",
     )
     .unwrap();
+    // let mut file = std::fs::File::create("prover_out.rust").unwrap();
     std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
 
     prover.assert_satisfied();
+    println!("run");
 }
 
 fn format_code(line: String) -> String {

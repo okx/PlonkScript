@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use halo2_proofs::{
+    arithmetic::Field,
     circuit::{floor_planner::V1, *},
     dev::{FailureLocation, MockProver, VerifyFailure},
     pasta::{group::ff::PrimeField, Fp},
@@ -8,21 +9,22 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
-use crate::SimplifiedConstraitSystem;
-use crate::CONTEXT;
+use crate::{engine::DEFAULT_INSTANCE_COLUMN_NAME, CONTEXT};
+use crate::{system::CellExpression, SimplifiedConstraitSystem};
 
 #[derive(Default, Debug)]
 pub struct MyCircuit<F: PrimeField> {
-    pub scs: SimplifiedConstraitSystem,
+    // pub scs: SimplifiedConstraitSystem,
     pub _marker: PhantomData<F>,
 }
 
 #[derive(Debug, Clone)]
 pub struct CommonConfig<F: PrimeField> {
-    advices: Vec<Column<Advice>>,
-    fixeds: Vec<Column<Fixed>>,
-    selectors: Vec<Selector>,
-    instances: Vec<Column<Instance>>,
+    advices: Vec<(String, Column<Advice>)>,
+    fixeds: Vec<(String, Column<Fixed>)>,
+    selectors: Vec<(String, Selector)>,
+    instances: Vec<(String, Column<Instance>)>,
+    acells: Vec<(String, AssignedCell<F, F>)>,
     _marker: PhantomData<F>,
 }
 
@@ -42,110 +44,230 @@ impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
         let mut fixeds = Vec::new();
         let mut selectors = Vec::new();
         let mut instances = Vec::new();
+        let acells = Vec::new();
+
+        if unsafe { CONTEXT.signals.len() > 0 } {
+            instances.push((
+                DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
+                meta.instance_column(),
+            ));
+        }
 
         // build columns
-        let scs = unsafe { CONTEXT.clone() };
-        for col in scs.columns {
+        let scols = unsafe { CONTEXT.columns.clone() };
+        for col in scols {
             match col.ctype {
-                crate::system::ColumnType::Advice => advices.push(meta.advice_column()),
-                crate::system::ColumnType::Selector => selectors.push(meta.selector()),
-                crate::system::ColumnType::Fixed => fixeds.push(meta.fixed_column()),
-                crate::system::ColumnType::Instance => instances.push(meta.instance_column()),
+                crate::system::ColumnType::Advice => advices.push((col.name, meta.advice_column())),
+                crate::system::ColumnType::Selector => selectors.push((col.name, meta.selector())),
+                crate::system::ColumnType::Fixed => fixeds.push((col.name, meta.fixed_column())),
+                crate::system::ColumnType::Instance => {
+                    instances.push((col.name, meta.instance_column()))
+                }
             }
         }
 
         // enable_equality
         for c in advices.clone() {
-            meta.enable_equality(c);
+            meta.enable_equality(c.1);
         }
         for c in instances.clone() {
-            meta.enable_equality(c);
+            meta.enable_equality(c.1);
         }
 
-        // gates
-        // for g in scs.ga
-        // meta.create_gate("add", |meta| {
-        //     //
-        //     // col_a | col_b | col_c | selector
-        //     //   a      b        c       s
-        //     //
-        //     let s = meta.query_selector(selector);
-        //     let a = meta.query_advice(col_a, Rotation::cur());
-        //     let b = meta.query_advice(col_b, Rotation::cur());
-        //     let c = meta.query_advice(col_c, Rotation::cur());
-        //     vec![s * (a + b.clone() * Expression::Constant(F::from(2 as u64)) - c)]
-        // });
-
-        CommonConfig {
+        let config = CommonConfig {
             advices,
             fixeds,
             selectors,
             instances,
+            acells,
             _marker: PhantomData,
+        };
+
+        // build gates
+        let sgates = unsafe { CONTEXT.gates.clone() };
+        for g in sgates {
+            meta.create_gate("unknown", |meta| {
+                vec![convert_to_gate_expression(meta, config.clone(), g)]
+            });
         }
+
+        config
     }
 
     fn synthesize(
         &self,
-        config: Self::Config,
+        mut config: Self::Config,
         mut layouter: impl Layouter<F>,
     ) -> Result<(), Error> {
-        // layouter.assign_region(
-        //     || "first row",
-        //     |mut region| {
-        //         self.config.selector.enable(&mut region, 0)?;
+        let sregions = unsafe { CONTEXT.regions.clone() };
 
-        //         let a_cell = region.assign_advice_from_instance(
-        //             || "f(0)",
-        //             self.config.instance,
-        //             0,
-        //             self.config.cols[0],
-        //             0,
-        //         )?;
+        for r in sregions {
+            layouter.assign_region(
+                || r.name.clone(),
+                |mut region| {
+                    for ins in r.instructions.clone() {
+                        match ins {
+                            crate::system::Instruction::EnableSelector(c) => config
+                                .get_selector(c.column.name)
+                                .enable(&mut region, c.index as usize)?,
+                            crate::system::Instruction::AssignAdvice(a, exp) => {
+                                let acell = region.assign_advice(
+                                    || "here",
+                                    config.get_advice(a.column.name),
+                                    a.index as usize,
+                                    || config.convert_to_value(exp.clone()),
+                                )?;
+                                config.acells.push((a.name, acell));
+                            }
+                            crate::system::Instruction::AssignAdviceFromConstant(_, _) => todo!(),
+                            crate::system::Instruction::AssignAdviceFromInstance(a, b) => {
+                                let acell = region.assign_advice_from_instance(
+                                    || "instance",
+                                    config.get_instance(b.column.name),
+                                    b.index as usize,
+                                    config.get_advice(a.column.name),
+                                    a.index as usize,
+                                )?;
+                                config.acells.push((a.name, acell));
+                            }
+                            crate::system::Instruction::ConstrainEqual(a, b) => {
+                                let acell = config.get_assigned_cell(a.name);
+                                let bcell = config.get_assigned_cell(b.name);
+                                region.constrain_equal(acell.cell(), bcell.cell())?;
+                            }
+                            crate::system::Instruction::ConstrainConstant() => todo!(),
+                        };
+                    }
 
-        //         let b_cell = region.assign_advice_from_instance(
-        //             || "f(1)",
-        //             self.config.instance,
-        //             1,
-        //             self.config.cols[1],
-        //             0,
-        //         )?;
-
-        //         let c_cell = region.assign_advice(
-        //             || "a + b",
-        //             self.config.cols[2],
-        //             0,
-        //             || a_cell.value().copied() + b_cell.value().copied() * Value::known(F::from(2)),
-        //         )?;
-
-        //         // Copy the value from b & c in previous row to a & b in current row
-        //         prev_b.copy_advice(|| "a", &mut region, self.config.cols[0], 0)?;
-        //         prev_c.copy_advice(|| "b", &mut region, self.config.cols[1], 0)?;
-
-        //         let c_cell = region.assign_advice(
-        //             || "c",
-        //             self.config.cols[2],
-        //             0,
-        //             || prev_b.value().copied() + prev_c.value().copied() + prev_c.value().copied(),
-        //         )?;
-
-        //         Ok((a_cell, b_cell, c_cell))
-        //     },
-        // );
-
-        // config.table.load(&mut layouter)?;
-
-        // config.assign(
-        //     layouter.namespace(|| "Assign simple value"),
-        //     self.value,
-        //     RANGE,
-        // )?;
-        // config.assign(
-        //     layouter.namespace(|| "Assign larger value"),
-        //     self.large_value,
-        //     LOOKUP_RANGE,
-        // )?;
+                    Ok(())
+                },
+            )?;
+        }
 
         Ok(())
+    }
+}
+
+impl<F: PrimeField> CommonConfig<F> {
+    fn get_selector(&self, name: String) -> Selector {
+        self.selectors
+            .clone()
+            .into_iter()
+            .filter(|x| x.0 == name)
+            .nth(0)
+            .unwrap()
+            .1
+    }
+
+    fn get_advice(&self, name: String) -> Column<Advice> {
+        self.advices
+            .clone()
+            .into_iter()
+            .filter(|x| x.0 == name)
+            .nth(0)
+            .unwrap()
+            .1
+    }
+
+    fn get_instance(&self, name: String) -> Column<Instance> {
+        self.instances
+            .clone()
+            .into_iter()
+            .filter(|x| x.0 == name)
+            .nth(0)
+            .unwrap()
+            .1
+    }
+
+    fn get_assigned_cell(&self, name: String) -> AssignedCell<F, F> {
+        if let Some(acell) = self
+            .acells
+            .clone()
+            .iter()
+            .filter(|x| x.0 == name)
+            .nth(0)
+            .clone()
+        {
+            return acell.1.clone();
+        }
+        panic!("cannot find assigned cell of {}", name)
+    }
+
+    fn query_column(&self, meta: &mut VirtualCells<F>, cell: crate::system::Cell) -> Expression<F> {
+        let column = cell.column;
+        match column.ctype {
+            crate::system::ColumnType::Selector => meta.query_selector(
+                self.selectors
+                    .clone()
+                    .into_iter()
+                    .filter(|x| x.0 == column.name)
+                    .nth(0)
+                    .unwrap()
+                    .1,
+            ),
+            crate::system::ColumnType::Advice => meta.query_advice(
+                self.advices
+                    .clone()
+                    .into_iter()
+                    .filter(|x| x.0 == column.name)
+                    .nth(0)
+                    .unwrap()
+                    .1,
+                match cell.index {
+                    -1 => Rotation::prev(),
+                    0 => Rotation::cur(),
+                    1 => Rotation::next(),
+                    _ => todo!(),
+                },
+            ),
+            crate::system::ColumnType::Fixed => todo!(),
+            crate::system::ColumnType::Instance => todo!(),
+        }
+    }
+
+    fn convert_to_value(&self, exp: CellExpression) -> Value<F> {
+        match exp {
+            CellExpression::Constant(c) => Value::known(F::from(c as u64)),
+            CellExpression::CellValue(c) => match c.column.ctype {
+                crate::system::ColumnType::Selector => {
+                    self.get_assigned_cell(c.name).value().copied()
+                }
+                crate::system::ColumnType::Advice => {
+                    self.get_assigned_cell(c.name).value().copied()
+                }
+                crate::system::ColumnType::Fixed => todo!(),
+                crate::system::ColumnType::Instance => todo!(),
+            },
+            CellExpression::Negated(n) => self.convert_to_value(*n),
+            CellExpression::Product(a, b) => self.convert_to_value(*a) * self.convert_to_value(*b),
+            CellExpression::Sum(a, b) => self.convert_to_value(*a) + self.convert_to_value(*b),
+            CellExpression::Scaled(_, _) => todo!(),
+        }
+    }
+}
+
+fn convert_to_gate_expression<F: PrimeField>(
+    meta: &mut VirtualCells<F>,
+    config: CommonConfig<F>,
+    exp: CellExpression,
+) -> Expression<F> {
+    match exp {
+        CellExpression::Constant(c) => Expression::Constant(F::from(c as u64)),
+        CellExpression::CellValue(c) => match c.column.ctype {
+            crate::system::ColumnType::Selector => config.query_column(meta, c),
+            crate::system::ColumnType::Advice => config.query_column(meta, c),
+            crate::system::ColumnType::Fixed => todo!(),
+            crate::system::ColumnType::Instance => todo!(),
+        },
+        CellExpression::Negated(n) => -convert_to_gate_expression(meta, config.clone(), *n),
+        CellExpression::Product(a, b) => {
+            convert_to_gate_expression(meta, config.clone(), *a)
+                * convert_to_gate_expression(meta, config.clone(), *b)
+        }
+        CellExpression::Sum(a, b) => {
+            convert_to_gate_expression(meta, config.clone(), *a)
+                + convert_to_gate_expression(meta, config.clone(), *b)
+        }
+        CellExpression::Scaled(_, _) => todo!(),
     }
 }

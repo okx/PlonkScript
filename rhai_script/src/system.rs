@@ -1,3 +1,7 @@
+use std::any::Any;
+
+use halo2_proofs::{arithmetic::Field, circuit::AssignedCell};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ColumnType {
@@ -42,8 +46,15 @@ pub enum CellExpression {
     Sum(Box<CellExpression>, Box<CellExpression>),
     Scaled(Box<CellExpression>, i64),
 }
+// trait MyTrait: std::any::Any + std::marker::Copy {}
+// trait MyTrait:Any+ Copy{
+//     fn do_something(&self) -> Box<dyn MyTrait>;
+// }
 
-#[derive(Debug, Clone, Default)]
+// impl<T: std::any::Any + std::marker::Copy> MyTrait for T {}
+// pub trait FieldTrait: Field  {}
+
+#[derive(Debug, Default)]
 #[allow(dead_code)]
 pub struct SimplifiedConstraitSystem {
     pub signals: Vec<Cell>,
@@ -51,6 +62,9 @@ pub struct SimplifiedConstraitSystem {
     pub regions: Vec<Region>,
     pub instance_count: i64,
     pub gates: Vec<CellExpression>,
+    // pub acells: Vec<(String, Box<dyn MyTrait>)>,
+    // pub acells: Vec<(String, Box<AssignedCell<dyn Field,dyn Field>>)>,
+    // pub acells: Vec<(String, Box<dyn FieldTrait>)>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -65,16 +79,10 @@ pub struct Region {
 pub enum Instruction {
     // CopyAdvice(),
     // AssignFixed(i64, i64, CellExpression),       // fixed, fix_row(offset), value expression
-    EnableSelector(String, i64),               // selector, row(offset)
-    AssignAdvice(String, i64, CellExpression), // advice, adv_row(offset), value expression
-    AssignAdviceFromConstant(i64, i64, i64),   // advice, adv_row(offset), constant
-    AssignAdviceFromInstance(String, i64, String, i64), // advice, adv_row(offset), instance, ins_row
-    ConstrainEqual(String, i64, String, i64), // advice, adv_row(offset), advice, adv_row(offset)
-    ConstrainConstant(),                      //
-}
-
-impl SimplifiedConstraitSystem {
-    // pub fn new() -> SimplifiedConstraitSystem {
-    //     SimplifiedConstraitSystem { columns: vec![] }
-    // }
+    EnableSelector(Cell),                 // selector, row(offset)
+    AssignAdvice(Cell, CellExpression),   // advice, adv_row(offset), value expression
+    AssignAdviceFromConstant(Cell, i64),  // advice, adv_row(offset), constant
+    AssignAdviceFromInstance(Cell, Cell), // advice, adv_row(offset), instance, ins_row
+    ConstrainEqual(Cell, Cell),           // advice, adv_row(offset), advice, adv_row(offset)
+    ConstrainConstant(),                  //
 }

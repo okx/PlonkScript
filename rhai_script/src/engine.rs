@@ -1,5 +1,7 @@
 use crate::{system::*, CONTEXT};
 
+pub const DEFAULT_INSTANCE_COLUMN_NAME: &str = "defins";
+
 pub trait EngineExt {
     fn register_plonk_script(&mut self);
 }
@@ -55,7 +57,7 @@ fn init_input(v: &str) -> Cell {
         name: v.to_string(),
         index: get_lastest_instance_index(),
         column: Column {
-            name: v.to_string(),
+            name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Input,
         },
@@ -71,7 +73,7 @@ fn init_output(v: String) -> Cell {
         name: v.to_string(),
         index: get_lastest_instance_index(),
         column: Column {
-            name: v.to_string(),
+            name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Output,
         },
@@ -124,30 +126,15 @@ fn define_region(v: String) {
 fn assign_constraint(a: Cell, b: Cell) {
     // println!("assign_constraint({:?}, {:?})", a, b);
     push_instruction_to_last_region(match (a.column.ctype, b.column.ctype) {
-        (ColumnType::Advice, ColumnType::Instance) => vec![Instruction::AssignAdviceFromInstance(
-            a.column.name.clone(),
-            a.index,
-            "default".to_string(),
-            b.index,
-        )],
-        (ColumnType::Instance, ColumnType::Advice) => vec![Instruction::AssignAdviceFromInstance(
-            b.column.name.clone(),
-            b.index,
-            "default".to_string(),
-            a.index,
-        )],
+        (ColumnType::Advice, ColumnType::Instance) => {
+            vec![Instruction::AssignAdviceFromInstance(a, b)]
+        }
+        (ColumnType::Instance, ColumnType::Advice) => {
+            vec![Instruction::AssignAdviceFromInstance(b, a)]
+        }
         (_, _) => vec![
-            Instruction::AssignAdvice(
-                a.column.name.clone(),
-                a.index,
-                CellExpression::CellValue(b.clone()),
-            ),
-            Instruction::ConstrainEqual(
-                a.column.name.clone(),
-                a.index,
-                b.column.name.clone(),
-                b.index,
-            ),
+            Instruction::AssignAdvice(a.clone(), CellExpression::CellValue(b.clone())),
+            Instruction::ConstrainEqual(a, b),
         ],
     });
 }
@@ -155,7 +142,7 @@ fn assign_constraint(a: Cell, b: Cell) {
 // a <== b (b is expresion, e.g. b1 + b2)
 fn assign_constraint_cell_ce(a: Cell, b: CellExpression) {
     // println!("assign_constraint({:?}, {:?})", a, b);
-    push_instruction_to_last_region(vec![Instruction::AssignAdvice(a.column.name, a.index, b)]);
+    push_instruction_to_last_region(vec![Instruction::AssignAdvice(a, b)]);
 }
 fn push_instruction_to_last_region(a: Vec<Instruction>) {
     if let Some(region) = unsafe { CONTEXT.regions.last_mut() } {
@@ -191,9 +178,7 @@ fn push_instruction_to_last_region(a: Vec<Instruction>) {
 fn enable_selector(a: Cell) {
     // println!("enable_selector({:?})", a);
     if let Some(region) = unsafe { CONTEXT.regions.last_mut() } {
-        region
-            .instructions
-            .push(Instruction::EnableSelector(a.column.name, a.index));
+        region.instructions.push(Instruction::EnableSelector(a));
     }
 }
 // fn assign_only_int(a: Cell, b: i64) {

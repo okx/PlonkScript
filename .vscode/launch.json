@@ -179,7 +179,7 @@
                 "args": [
                     "build",
                     "--bin=rhai_script",
-                    // "--package=rhai_script"
+                    "--package=rhai_script"
                 ],
                 "filter": {
                     "name": "rhai_script",
