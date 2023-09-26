@@ -1,11 +1,7 @@
 use std::collections::HashMap;
-use std::fs::{File, self};
-use std::io::{self, BufRead};
-use std::path::Path;
+use std::fs;
 
 use circuit::MyCircuit;
-use halo2_proofs::arithmetic::Field;
-use regex::Regex;
 use rhai::{Engine, EvalAltResult};
 use system::SimplifiedConstraitSystem;
 use transpiler::transpile;

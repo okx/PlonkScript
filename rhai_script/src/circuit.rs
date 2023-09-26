@@ -1,16 +1,14 @@
 use std::marker::PhantomData;
 
 use halo2_proofs::{
-    arithmetic::Field,
     circuit::{floor_planner::V1, *},
-    dev::{FailureLocation, MockProver, VerifyFailure},
-    pasta::{group::ff::PrimeField, Fp},
+    pasta::group::ff::PrimeField,
     plonk::*,
     poly::Rotation,
 };
 
+use crate::system::CellExpression;
 use crate::{engine::DEFAULT_INSTANCE_COLUMN_NAME, CONTEXT};
-use crate::{system::CellExpression, SimplifiedConstraitSystem};
 
 #[derive(Default, Debug)]
 pub struct MyCircuit<F: PrimeField> {
@@ -19,6 +17,7 @@ pub struct MyCircuit<F: PrimeField> {
 }
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct CommonConfig<F: PrimeField> {
     advices: Vec<(String, Column<Advice>)>,
     fixeds: Vec<(String, Column<Fixed>)>,
@@ -181,12 +180,7 @@ impl<F: PrimeField> CommonConfig<F> {
     }
 
     fn get_assigned_cell(&self, name: String) -> AssignedCell<F, F> {
-        if let Some(acell) = self
-            .acells
-            .iter()
-            .filter(|x| x.0 == name)
-            .nth(0)
-        {
+        if let Some(acell) = self.acells.iter().filter(|x| x.0 == name).nth(0) {
             return acell.1.clone();
         }
         panic!("cannot find assigned cell of {}", name)
