@@ -1,4 +1,4 @@
-use std::{cell, collections::HashMap};
+use std::collections::HashMap;
 
 use crate::{system::*, CONTEXT};
 
@@ -38,6 +38,7 @@ impl EngineExt for rhai::Engine {
         .register_fn("*", operator_mul_column_cell)
         // .register_indexer_set(TestStruct::set_field)
         ;
+        define_region("default".to_string());
     }
 }
 

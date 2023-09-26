@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs::File;
+use std::fs::{File, self};
 use std::io::{self, BufRead};
 use std::path::Path;
 
@@ -8,6 +8,7 @@ use halo2_proofs::arithmetic::Field;
 use regex::Regex;
 use rhai::{Engine, EvalAltResult};
 use system::SimplifiedConstraitSystem;
+use transpiler::transpile;
 
 use crate::engine::EngineExt;
 use once_cell::sync::Lazy;
@@ -15,6 +16,7 @@ use once_cell::sync::Lazy;
 mod circuit;
 mod engine;
 mod system;
+mod transpiler;
 
 static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     // ..Default::default()
@@ -37,31 +39,21 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
         CONTEXT.inputs.insert("in2".to_string(), "1".to_string());
     }
 
-    engine.run_file("rhai_script/fibonacci.rhai".into())?;
+    let num = 1;
+
+    if num == 0 {
+        engine.run_file("rhai_script/fibonacci.rhai".into())?;
+    } else {
+        let code = fs::read_to_string("rhai_script/fibonacci.plonk").unwrap();
+        let script = transpile(code);
+
+        // println!("{}", script);
+        engine.run(script.as_str())?;
+    }
 
     let d = unsafe { format!("{:#?}", CONTEXT) };
     let mut file = std::fs::File::create("out.rust").unwrap();
     std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
-
-    let num = 0;
-    if num == 1 {
-        let mut scripts = Vec::<String>::new();
-        // scripts.push("let N = 10;".to_string());
-        if let Ok(lines) = read_lines("rhai_script/fibonacci.plonk") {
-            // Consumes the iterator, returns an (Optional) String
-            for line_result in lines {
-                if let Ok(line) = line_result {
-                    // println!("{}", line);
-                    scripts.push(format_code(line));
-                }
-            }
-        }
-
-        let script = scripts.join("\n");
-        println!("{}", script);
-
-        engine.run(script.as_str())?;
-    }
 
     let public_input = unsafe { CONTEXT.signals.clone() }
         .into_iter()
@@ -107,55 +99,4 @@ fn run_prover(
     } else {
         println!("{:?}", presult.err());
     }
-}
-
-fn format_code(line: String) -> String {
-    let re_gate = Regex::new(
-        r"(?x)
-        gate\s(?<name>[\w\d]+)
-        \((?<parameters>
-        (?:\[[\w\d,\s]*\](?:,\s*)?){2}
-        )\)",
-    )
-    .unwrap();
-    // gate add([a, b, c], [s]) {
-    // fn add(a, b, c, s) {
-
-    let result = re_gate.captures(&line);
-    if let Some(v) = result {
-        return format!(
-            "fn {}({}) {{",
-            &v["name"],
-            &v["parameters"]
-                .replace("[", "")
-                .replace("]", "")
-                .split(",")
-                .map(|x| x.trim())
-                .collect::<Vec<&str>>()
-                .join(", ")
-        );
-    }
-
-    let re_gate_return = Regex::new(
-        r"(?x)
-        return\s+<<(?<exp>.*)>>;",
-    )
-    .unwrap();
-    // return <<s * (a + b - c)>>; // a == a[0]
-    // set_gate(s * (a + b - c));
-
-    let result = re_gate_return.captures(&line);
-    if let Some(v) = result {
-        return format!("set_gate({});", &v["exp"],);
-    }
-
-    line
-}
-
-fn read_lines<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
-where
-    P: AsRef<Path>,
-{
-    let file = File::open(filename)?;
-    Ok(io::BufReader::new(file).lines())
 }
