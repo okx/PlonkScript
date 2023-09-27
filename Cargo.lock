@@ -892,11 +892,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2_proofs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b867a8d9bbb85fca76fff60652b5cd19b853a1c4d0665cb89bee68b18d2caf0"
+dependencies = [
+ "blake2b_simd",
+ "ff",
+ "group",
+ "maybe-rayon",
+ "pasta_curves",
+ "plotters",
+ "rand_core 0.6.4",
+ "tabbycat",
+ "tracing",
+]
+
+[[package]]
 name = "halo2_range_check"
 version = "0.1.0"
 dependencies = [
  "debug_parser",
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "serde 1.0.183",
  "serde_json 1.0.105",
 ]
@@ -1789,7 +1806,7 @@ dependencies = [
 name = "rhai_script"
 version = "0.1.0"
 dependencies = [
- "halo2_proofs",
+ "halo2_proofs 0.3.0",
  "once_cell",
  "regex",
  "rhai",
@@ -2361,6 +2378,18 @@ name = "wasm-bindgen-shared"
 version = "0.2.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
+
+[[package]]
+name = "wasm_test"
+version = "0.1.0"
+dependencies = [
+ "getrandom",
+ "halo2_proofs 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "once_cell",
+ "regex",
+ "rhai",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "web-sys"
