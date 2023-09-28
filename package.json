@@ -5,8 +5,9 @@
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
+    "dev:ui": "cd ui && yarn dev",
     "dev:transpiler": "cargo watch --ignore '*.rust' -x \"run --bin transpiler\"",
-    "build:wasm": "cd wasm_binding && wasm-pack build --target web",
+    "build:wasm": "cd wasm_binding && wasm-pack build --target bundler --out-dir ../ui/public/transpiler",
     "build:ui": "cd packages/ui && yarn build"
   },
   "author": "",
