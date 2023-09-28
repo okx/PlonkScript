@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "vadimcn.vscode-lldb",
+        "serayuzgur.crates",
+        "hediet.vscode-drawio",
+        "editorconfig.editorconfig",
+        "usernamehw.errorlens",
+        "tamasfe.even-better-toml",
+        "esbenp.prettier-vscode",
+        "vue.volar"
+    ]
+}
