@@ -3,19 +3,13 @@
     <q-splitter v-model="splitPercent" style="height: 90vh">
       <template v-slot:before>
         <div class="q-pa-md">
-          <div id="editor" ref="editor" style="height: 80vh"></div>
+          <div id="editorRef" ref="editorRef" style="height: 80vh"></div>
         </div>
       </template>
 
       <template v-slot:after>
         <div class="q-pa-md">
-          <div class="text-h4 q-mb-md">After</div>
-          <div v-for="n in 20" :key="n" class="q-my-md">
-            {{ n }}. Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-            Quis praesentium cumque magnam odio iure quidem, quod illum numquam
-            possimus obcaecati commodi minima assumenda consectetur culpa fuga
-            nulla ullam. In, libero.
-          </div>
+          <ConstraintsVisualization :data="vis" />
         </div>
       </template>
     </q-splitter>
@@ -33,6 +27,10 @@ import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
 import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { language } from 'src/services/PlonkScriptLanguage';
+import init, { try_run } from '../transpiler';
+import { convertMockProverOutputToObject } from 'src/services/MockProverTranslator';
+import { MockProverData } from 'src/services/ConstraintSystem';
+import ConstraintsVisualization from '../components/ConstraintsVisualization.vue';
 self.MonacoEnvironment = {
   getWorker(_, label) {
     // if (label === 'json') {
@@ -58,7 +56,7 @@ monaco.languages.register({ id: 'plonkscript' });
 monaco.languages.setMonarchTokensProvider('plonkscript', language);
 
 const splitPercent = ref(50);
-const editor = ref(null);
+const editorRef = ref(null);
 
 const code = `
 gate add(a, b, c, s) {
@@ -93,10 +91,12 @@ for i in 0..N {
 
 out <== c[N-1];
 `;
+const vis: Ref<MockProverData | undefined> = ref(undefined);
+
 setTimeout(() => {
-  if (editor.value) {
-    console.log('combine');
-    monaco.editor.create(editor.value as HTMLElement, {
+  if (editorRef.value) {
+    // console.log('combine');
+    const editor = monaco.editor.create(editorRef.value as HTMLElement, {
       value: code,
       language: 'plonkscript',
       // theme: 'vs-dark',
@@ -104,8 +104,35 @@ setTimeout(() => {
         enabled: false,
       },
     });
+
+    editor.addAction({
+      id: 'runCode',
+
+      label: 'RunCode',
+
+      keybindings: [
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyR,
+        monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter,
+      ],
+
+      contextMenuGroupId: 'debug',
+
+      contextMenuOrder: 1.5,
+
+      run: function (ed) {
+        const code = ed.getValue();
+        const result = try_run({
+          k: 4,
+          code,
+          inputs: { in1: '1', in2: '1' },
+        });
+        vis.value = convertMockProverOutputToObject(result);
+      },
+    });
   }
 }, 300);
+
+init();
 </script>
 
 <style scoped lang="scss">
