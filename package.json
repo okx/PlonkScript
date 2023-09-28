@@ -12,6 +12,6 @@
   "author": "",
   "private":"true",
   "workspaces":[
-    "packages/*"
+    "ui"
   ]
 }
