@@ -1,0 +1,11 @@
+[workspace]
+members = [
+    "lib_test",
+    "web_gcd",
+    "struct_test",
+    "halo2_range_check",
+    "plonk_by_hand",
+    "rhai_script",
+    "wasm_test",
+]
+resolver = "2"

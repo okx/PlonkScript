@@ -1,0 +1,193 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'lib_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=lib_test"
+                ],
+                "filter": {
+                    "name": "lib_test",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'lib_test'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=lib_test",
+                    "--package=lib_test"
+                ],
+                "filter": {
+                    "name": "lib_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'lib_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=lib_test",
+                    "--package=lib_test"
+                ],
+                "filter": {
+                    "name": "lib_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'web_gcd'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=web_gcd",
+                    "--package=web_gcd"
+                ],
+                "filter": {
+                    "name": "web_gcd",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'web_gcd'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=web_gcd",
+                    "--package=web_gcd"
+                ],
+                "filter": {
+                    "name": "web_gcd",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'struct_test'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=struct_test",
+                    "--package=struct_test"
+                ],
+                "filter": {
+                    "name": "struct_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'struct_test'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=struct_test",
+                    "--package=struct_test"
+                ],
+                "filter": {
+                    "name": "struct_test",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'halo2_range_check'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=halo2_range_check",
+                    "--package=halo2_range_check"
+                ],
+                "filter": {
+                    "name": "halo2_range_check",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'halo2_range_check'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=halo2_range_check",
+                    "--package=halo2_range_check"
+                ],
+                "filter": {
+                    "name": "halo2_range_check",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug main in executable 'rhai'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=rhai_script",
+                    "--package=rhai_script"
+                ],
+                "filter": {
+                    "name": "rhai_script",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
