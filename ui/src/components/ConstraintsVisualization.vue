@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div v-if="!data"></div>
+  <div v-else>
     <div class="q-pa-md">
       <q-checkbox v-model="showTooltip" label="Show Tooltip" />
       <q-checkbox
