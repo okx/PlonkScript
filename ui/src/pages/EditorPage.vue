@@ -17,42 +17,21 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref, watch } from 'vue';
-import { QTableColumn } from 'quasar';
-import { matOpenInNew } from '@quasar/extras/material-icons';
+import { Ref, ref } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
-import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
 import { language } from 'src/services/PlonkScriptLanguage';
 import init, { try_run } from '../transpiler';
 import { convertMockProverOutputToObject } from 'src/services/MockProverTranslator';
 import { MockProverData } from 'src/services/ConstraintSystem';
 import ConstraintsVisualization from '../components/ConstraintsVisualization.vue';
 self.MonacoEnvironment = {
-  getWorker(_, label) {
-    // if (label === 'json') {
-    //   return new jsonWorker()
-    // }
-    // if (label === 'css' || label === 'scss' || label === 'less') {
-    //   return new cssWorker()
-    // }
-    // if (label === 'html' || label === 'handlebars' || label === 'razor') {
-    //   return new htmlWorker()
-    // }
-    // if (label === 'typescript' || label === 'javascript') {
-    //   return new tsWorker()
-    // }
+  getWorker() {
     return new editorWorker();
   },
 };
 
-// Register a new language
 monaco.languages.register({ id: 'plonkscript' });
-
-// Register a tokens provider for the language
 monaco.languages.setMonarchTokensProvider('plonkscript', language);
 
 const splitPercent = ref(50);
@@ -90,6 +69,8 @@ for i in 0..N {
 }
 
 out <== c[N-1];
+
+// Press Ctrl+Enter to execute the code
 `;
 const vis: Ref<MockProverData | undefined> = ref(undefined);
 
@@ -113,6 +94,7 @@ setTimeout(() => {
       keybindings: [
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyR,
         monaco.KeyMod.WinCtrl | monaco.KeyCode.Enter,
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
       ],
 
       contextMenuGroupId: 'debug',
@@ -134,7 +116,3 @@ setTimeout(() => {
 
 init();
 </script>
-
-<style scoped lang="scss">
-//
-</style>

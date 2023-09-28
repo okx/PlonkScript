@@ -77,7 +77,6 @@
 <script setup lang="ts">
 import { Ref, ref, watch } from 'vue';
 import { QTableColumn } from 'quasar';
-import { matWarning } from '@quasar/extras/material-icons';
 import LeaderLine from 'leader-line-new';
 import {
   RowFieldType,
@@ -88,12 +87,6 @@ import {
   RowFieldWithPosition,
   getPermutationLines,
 } from 'src/services/ConstraintSystem';
-// import { IDataModel, dataList } from 'src/services/DefaultModels';
-
-// import { useQuasar } from 'quasar'
-
-//   const $q = useQuasar()
-//   $q.iconSet. = matWarning
 
 export interface ConstraintsVisualizationProps {
   data?: MockProverData;
@@ -102,7 +95,6 @@ const props = withDefaults(defineProps<ConstraintsVisualizationProps>(), {
   data: undefined,
 });
 
-// const modelSelection: Ref<IDataModel | undefined> = ref(undefined);
 function getColorByColName(col: string): string {
   col = col.slice(0, col.indexOf('-'));
   return col == 'instance'

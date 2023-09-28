@@ -40,10 +40,8 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref, watch } from 'vue';
-import { QTableColumn } from 'quasar';
+import { Ref, ref } from 'vue';
 import { matOpenInNew } from '@quasar/extras/material-icons';
-import LeaderLine from 'leader-line-new';
 import { IDataModel, dataList } from 'src/services/DefaultModels';
 import ConstraintsVisualization from '../components/ConstraintsVisualization.vue';
 

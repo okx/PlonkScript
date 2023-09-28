@@ -11,7 +11,7 @@
           @click="toggleLeftDrawer"
         /> -->
 
-        <q-toolbar-title> Halo2 Visualizer </q-toolbar-title>
+        <q-toolbar-title> Plonk Script </q-toolbar-title>
 
         <div>Demo Version</div>
       </q-toolbar>
@@ -44,16 +44,5 @@
 </template>
 
 <script setup lang="ts">
-// const rust = import('../transpiler/wasm_binding');
-
-// rust.then((m) => m.greet("hello")).catch(console.error);
-// import init, { greet, try_run } from '../transpiler';
-
-// async function run() {
-//   await init();
-//   greet('hello');
-//   // console.log('result:', result);
-// }
-
-// run();
+//
 </script>
