@@ -6,6 +6,7 @@
   "devDependencies": {},
   "scripts": {
     "dev:transpiler": "cargo watch --ignore '*.rust' -x \"run --bin rhai_script\"",
+    "build:wasm": "cd wasm_test && wasm-pack build --target web",
     "build:ui": "cd packages/ui && yarn build"
   },
   "author": "",
