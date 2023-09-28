@@ -47,7 +47,7 @@ fn main() {
                 .map(|x| (x.0.to_string(), x.1.to_string())),
         );
         // log(&format!("{:?}", inputs));
-        match rhai_script::try_run(req.code, req.k, inputs) {
+        match transpiler::try_run(req.code, req.k, inputs) {
             Ok(d) => Ok(JsValue::from_str(d.as_str())),
             Err(d) => Err(JsValue::from_str(d.to_string().as_str())),
         }

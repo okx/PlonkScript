@@ -1232,16 +1232,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rhai_script"
-version = "0.1.0"
-dependencies = [
- "halo2_proofs",
- "once_cell",
- "regex",
- "rhai",
-]
-
-[[package]]
 name = "rustc-demangle"
 version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1533,6 +1523,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "transpiler"
+version = "0.1.0"
+dependencies = [
+ "halo2_proofs",
+ "once_cell",
+ "regex",
+ "rhai",
+]
+
+[[package]]
 name = "unarray"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1636,14 +1636,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca6ad05a4870b2bf5fe995117d3728437bd27d7cd5f06f13c17443ef369775a1"
 
 [[package]]
-name = "wasm_test"
+name = "wasm_binding"
 version = "0.1.0"
 dependencies = [
  "getrandom",
  "parking_lot",
- "rhai_script",
  "serde",
  "serde-wasm-bindgen",
+ "transpiler",
  "wasm-bindgen",
 ]
 

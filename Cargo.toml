@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "rhai_script",
-    "wasm_test",
+    "transpiler",
+    "wasm_binding",
 ]
 resolver = "2"

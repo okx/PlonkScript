@@ -174,15 +174,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug main in executable 'rhai'",
+            "name": "Debug main in executable 'transpiler'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rhai_script",
-                    "--package=rhai_script"
+                    "--bin=transpiler",
+                    "--package=transpiler"
                 ],
                 "filter": {
-                    "name": "rhai_script",
+                    "name": "transpiler",
                     "kind": "bin"
                 }
             },

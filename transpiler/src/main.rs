@@ -1,11 +1,11 @@
 use std::fs;
 
 use rhai::EvalAltResult;
-use rhai_script::try_run;
+use transpiler::try_run;
 
 #[allow(unreachable_code)]
 pub fn main() -> Result<(), Box<EvalAltResult>> {
-    let code = fs::read_to_string("rhai_script/fibonacci.plonk").unwrap();
+    let code = fs::read_to_string("transpiler/fibonacci.plonk").unwrap();
     let k = 4;
     let inputs = vec![
         ("in1".to_string(), "1".to_string()),
