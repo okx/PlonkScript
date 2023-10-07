@@ -1,8 +1,8 @@
-name: deploy-ui
+name: deploy-all
 on:
   workflow_dispatch: {}
   workflow_run:
-    workflows: [build-ui]
+    workflows: [build-docs]
     types: [completed]
 
 jobs:
@@ -20,8 +20,8 @@ jobs:
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          name: ui
-          workflow: build-ui.yml
+          name: docs
+          workflow: build-docs.yml
 
       - uses: actions/configure-pages@v2
       - uses: actions/upload-pages-artifact@v1

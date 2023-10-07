@@ -36,7 +36,7 @@ while x > 0 {
 
 ## For Loop
 
-Iterating through a numeric [range](ranges.html) or an [array](arrays.html), or any iterable type, is provided by the `for` … `in` loop.
+Iterating through a numeric range or an array, or any iterable type, is provided by the `for` … `in` loop.
 
 There are two alternative syntaxes, one including a counter variable:
 

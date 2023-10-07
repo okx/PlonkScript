@@ -1,18 +1,18 @@
-name: build-ui
+name: build-docs
 
 on:
   push:
     branches:
       - main
     paths:
-      - "ui/**"
-      - ".github/workflows/build-ui.yml"
+      - "docs/**"
+      - ".github/workflows/build-docs.yml"
   pull_request:
     branches:
       - main
     paths:
-      - "ui/**"
-      - ".github/workflows/build-ui.yml"
+      - "docs/**"
+      - ".github/workflows/build-docs.yml"
   workflow_dispatch: {}
   workflow_run:
     workflows: [build-wasm]
@@ -22,14 +22,14 @@ env:
   VERSION: 0.1.${{ github.run_number }}
 
 jobs:
-  build-ui:
+  build-docs:
     runs-on: ubuntu-latest
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set Node.js 18.x (ui)
+      - name: Set Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -39,27 +39,24 @@ jobs:
       - name: Install Dependencies
         run: yarn
 
-      - name: change publicPath
-        run: |
-          sed -i "s/\/\/ publicPath: '\/'/publicPath: 'play'/" ui/quasar.config.js
-
-      - name: Download wasm
+      - name: Download ui
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          name: wasm
-          workflow: build-wasm.yml
-          path: ui/src/transpiler
+          name: ui
+          workflow: build-ui.yml
+          path: docs/content/public/play
 
       - name: Build
         run: |
-          yarn build:ui
+          yarn build:docs
 
       - name: version
+        if: always()
         run: |
-          echo ${VERSION}>ui/dist/spa/version.txt
+          echo ${VERSION}>docs/content/.vitepress/dist/version.txt
 
       - uses: actions/upload-artifact@v3
         with:
-          name: ui
-          path: ui/dist/spa
+          name: docs
+          path: docs/content/.vitepress/dist
