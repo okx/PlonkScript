@@ -1,0 +1,25 @@
+{
+  "name": "plonkscript-docs",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev content",
+    "build": "vitepress build content",
+    "preview": "vitepress preview content"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss7-compat": "^2.0.4",
+    "autoprefixer": "^9",
+    "js-yaml": "^4.1.0",
+    "markdown-it-mathjax3": "^4.3.2",
+    "postcss": "^7",
+    "tailwindcss": "^3.3.3",
+    "vitepress": "^1.0.0-rc.20"
+  },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
+  }
+}

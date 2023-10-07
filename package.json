@@ -1,18 +1,21 @@
 {
-  "name": "halo2visualizer",
+  "name": "plonkscript",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "devDependencies": {},
   "scripts": {
     "dev:ui": "cd ui && yarn dev",
+    "dev:docs": "cd docs && yarn dev",
     "dev:transpiler": "cargo watch --ignore '*.rust' -x \"run --bin transpiler\"",
     "build:wasm": "cd wasm_binding && wasm-pack build --target web --out-dir ../ui/src/transpiler",
+    "build:docs": "cd docs && yarn build",
     "build:ui": "cd ui && yarn build"
   },
   "author": "",
   "private":"true",
   "workspaces":[
+    "docs",
     "ui"
   ]
 }
