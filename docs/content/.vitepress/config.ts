@@ -22,7 +22,8 @@ const customElements = [
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "plonk.pro",
-  description: "Plonk Script is a domain-specific scripting language designed for Plonkish arithmetic, offering enhanced readability, expressiveness, and compatibility with systems like halo2.",
+  description:
+    "Plonk Script is a domain-specific scripting language designed for Plonkish arithmetic, offering enhanced readability, expressiveness, and compatibility with systems like halo2.",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -77,13 +78,13 @@ export default defineConfig({
     config: (md) => {
       md.use(mathjax3);
     },
-    languages:[
-       {
+    languages: [
+      {
         id: "plonkscript",
-        scopeName: 'source.plonkscript',
-        grammar: plonkscriptGrammar as any,
-        aliases: ['ps', 'plonk'],
-      }
+        scopeName: "source.plonkscript",
+        grammar: plonkscriptGrammar,
+        aliases: ["ps", "plonk"],
+      } as any,
     ],
   },
   vue: {
