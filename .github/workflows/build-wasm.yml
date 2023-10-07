@@ -1,0 +1,42 @@
+name: build-wasm
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "vendor/**"
+      - "transpiler/**"
+      - "wasm_binding/**"
+      - ".github/workflows/build-wasm.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "vendor/**"
+      - "transpiler/**"
+      - "wasm_binding/**"
+      - ".github/workflows/build-wasm.yml"
+
+env:
+  VERSION: 0.1.${{ github.run_number }}
+
+jobs:
+  build-ui:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          cd wasm_binding && wasm-pack build --target web --release
+
+      - name: version
+        run: |
+          echo ${VERSION}>wasm_binding/pkg/version.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wasm
+          path: wasm_binding/pkg

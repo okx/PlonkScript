@@ -5,14 +5,18 @@ on:
     branches:
       - main
     paths:
-      - "packages/ui/**"
+      - "ui/**"
       - ".github/workflows/build-ui.yml"
   pull_request:
     branches:
       - main
     paths:
-      - "packages/ui/**"
+      - "ui/**"
       - ".github/workflows/build-ui.yml"
+  workflow_dispatch: {}
+  workflow_run:
+    workflows: [build-wasm]
+    types: [completed]
 
 env:
   VERSION: 0.1.${{ github.run_number }}
@@ -20,6 +24,7 @@ env:
 jobs:
   build-ui:
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     steps:
       - uses: actions/checkout@v3
@@ -34,9 +39,18 @@ jobs:
       - name: Install Dependencies
         run: yarn
 
-      - name: Change version number
+      - name: change publicPath
+        if: false
         run: |
-          sed -i "s/\/\/ publicPath: '\/'/publicPath: 'halo2visualizer'/" packages/ui/quasar.config.js
+          sed -i "s/\/\/ publicPath: '\/'/publicPath: 'halo2visualizer'/" ui/quasar.config.js
+
+      - name: Download wasm
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: wasm
+          workflow: build-wasm.yml
+          path: ui/src/transpiler
 
       - name: Build
         run: |
@@ -44,9 +58,9 @@ jobs:
 
       - name: version
         run: |
-          echo ${VERSION}>packages/ui/dist/spa/version.txt
+          echo ${VERSION}>ui/dist/spa/version.txt
 
       - uses: actions/upload-artifact@v3
         with:
           name: ui
-          path: packages/ui/dist/spa
+          path: ui/dist/spa
