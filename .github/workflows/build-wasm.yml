@@ -34,6 +34,13 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Install latest nightly
+        uses: actions-rs/toolchain@v1
+        with:
+            toolchain: nightly-2023-09-19
+            override: true
+            components: rust-src
+
       - name: Build
         run: |
           cd wasm_binding && wasm-pack build --target web --release
