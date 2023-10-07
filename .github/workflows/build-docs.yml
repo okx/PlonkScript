@@ -15,7 +15,7 @@ on:
       - ".github/workflows/build-docs.yml"
   workflow_dispatch: {}
   workflow_run:
-    workflows: [build-wasm]
+    workflows: [build-ui]
     types: [completed]
 
 env:
@@ -52,7 +52,6 @@ jobs:
           yarn build:docs
 
       - name: version
-        if: always()
         run: |
           echo ${VERSION}>docs/content/.vitepress/dist/version.txt
 
