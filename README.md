@@ -1,4 +1,4 @@
-## Halo2 Visualizer
+## plonk.pro and Plonk Script (WIP)
 
 [DEMO](https://wizicer.github.io/halo2visualizer)
 

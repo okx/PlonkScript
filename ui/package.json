@@ -1,8 +1,8 @@
 {
   "name": "halo2vis",
   "version": "0.0.1",
-  "description": "Halo2 Visualizer",
-  "productName": "Halo2 Visualizer",
+  "description": "Plonk Script",
+  "productName": "Plonk Script",
   "private": true,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",

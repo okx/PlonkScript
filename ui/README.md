@@ -1,6 +1,6 @@
-# Halo2 Visualizer (halo2vis)
+# UI
 
-Halo2 Visualizer
+Plonk Script Editor
 
 ## Install the dependencies
 ```bash
