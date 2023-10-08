@@ -7,6 +7,8 @@
         "usernamehw.errorlens",
         "tamasfe.even-better-toml",
         "esbenp.prettier-vscode",
+        "pedro-w.tmlanguage",
+        "rust-lang.rust-analyzer",
         "vue.volar"
     ]
 }
