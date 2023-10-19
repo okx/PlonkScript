@@ -16,6 +16,16 @@
           </td>
         </tr>
       </table>
+
+      <q-table
+        :rows="gatesArray"
+        flat
+        bordered
+        dense
+        :pagination="pagination"
+        :hide-pagination="true"
+      >
+      </q-table>
     </div>
     <div class="q-pa-md row">
       <q-table
@@ -39,10 +49,16 @@
             "
             :style="'border-color: ' + rmapcolor[props.value.region] + ';'"
           >
-            <q-badge
-              :color="getColorByType(props.value.type, props.value.value)"
-              :label="props.value.type == 'Selector' ? '' : props.value.value"
-              :ref="
+            <template
+              v-for="(v, i) in Array.isArray(props.value.value)
+                ? props.value.value
+                : [props.value.value]"
+              :key="i"
+            >
+              <q-badge
+                :color="getColorByType(props.value.type, v)"
+                :label="props.value.type == 'Selector' ? '' : v"
+                :ref="
                 (el) => {
                   const elel = (el as any)?.$el;
                   if (!elel) return;
@@ -51,15 +67,18 @@
                   cellBadges[col][props.value.index] = elel;
                 }
               "
-            >
-              <q-tooltip :delay="showTooltip ? 0 : 100000">
-                {{
-                  `${
-                    props.value.region ? `Region: ${props.value.region}\n` : ''
-                  }Raw: ${props.value.raw}`
-                }}
-              </q-tooltip>
-            </q-badge>
+              >
+                <q-tooltip :delay="showTooltip ? 0 : 100000">
+                  {{
+                    `${
+                      props.value.region
+                        ? `Region: ${props.value.region}\n`
+                        : ''
+                    }Raw: ${props.value.raw}`
+                  }}
+                </q-tooltip>
+              </q-badge>
+            </template>
           </q-td>
         </template>
         <template v-slot:header-cell="props">
@@ -149,6 +168,8 @@ function toggleConstraints() {
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<string, string>[]> = ref([]);
 const rmapcolor: Ref<Record<string, string>> = ref({});
+const gates: Ref<Record<string, string>> = ref({});
+const gatesArray: Ref<Array<{ name: string; desc: string }>> = ref([]);
 
 function getBorderOfRegion(
   row: RowFieldWithPosition,
@@ -238,6 +259,11 @@ function loadData(data?: MockProverData) {
     rows.value = rr.rows;
     rmap.value = rr.rmap;
     rmapcolor.value = rr.rmapcolor;
+    gates.value = rr.gates;
+    gatesArray.value = Object.keys(rr.gates).map((_) => ({
+      name: _,
+      desc: rr.gates[_],
+    }));
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       line.remove();

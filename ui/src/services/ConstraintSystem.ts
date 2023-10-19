@@ -11,7 +11,7 @@ export type RowFieldType =
 export interface RowField {
   type: RowFieldType;
   raw?: string;
-  value?: string;
+  value?: string | string[];
 }
 export interface RowFieldWithPosition extends RowField {
   // x: number;
@@ -308,8 +308,7 @@ export function getRowsAndRegions(
       .filter((_) =>
         _.queried_selectors.some((s) => selector[Number(s[1])] == 'true')
       )
-      .map((_) => gates[_.name])
-      .join('\n');
+      .map((_) => _.name);
   }
   return { rows, gates, rmap, rmapcolor };
 }
@@ -335,7 +334,7 @@ function prettifyCell(
       return {
         type: 'Instance',
         raw: obj,
-        value: BigInt(obj).toString(),
+        value: shortenCellValue(obj),
       };
     }
     return {
@@ -351,7 +350,7 @@ function prettifyCell(
           : obj[0] == 'Poison'
           ? 'Poison'
           : 'Unknown',
-      value: BigInt(obj[1]).toString(),
+      value: shortenCellValue(obj[1]),
       raw: JSON.stringify(obj),
     };
   }
@@ -360,6 +359,28 @@ function prettifyCell(
     type: 'Unknown',
     raw: JSON.stringify(obj),
   };
+}
+
+function shortenCellValue(value: string): string {
+  try {
+    const v = BigInt(value);
+    if (v <= 9999999) {
+      return v.toString();
+    }
+
+    if (value.length > 8) {
+      return (
+        value.substring(0, 4) +
+        '..' +
+        value.substring(value.length - 2, value.length)
+      );
+    }
+
+    return value;
+  } catch (e) {
+    console.warn('cannot process value', value, e);
+    return value;
+  }
 }
 
 export function getPermutationLines(
@@ -399,8 +420,10 @@ export function getPermutationLines(
       const from = cellBadges[fromcolname][row];
       const to = cellBadges[tocolname][r];
 
-      const fromValue = rows[row][colDict[fromcolname]].value;
-      const toValue = rows[r][colDict[tocolname]].value;
+      let fromValue = rows[row][colDict[fromcolname]].value;
+      fromValue = Array.isArray(fromValue) ? fromValue.join(', ') : fromValue;
+      let toValue = rows[r][colDict[tocolname]].value;
+      toValue = Array.isArray(toValue) ? toValue.join(', ') : toValue;
 
       lines.push({ from, to, equal: fromValue == toValue, fromValue, toValue });
     }
