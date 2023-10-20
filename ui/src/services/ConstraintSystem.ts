@@ -100,6 +100,13 @@ export interface RegionsEntity {
   cells: [ColumnType, string][];
 }
 export type EnabledSelector = ['Selector', ...string[]];
+export type RegionInfoEntity = Record<
+  string,
+  {
+    color: string;
+    hits: number;
+  }
+>;
 
 export interface MockProverDataPermutation {
   type: string;
@@ -242,6 +249,7 @@ export function getRowsAndRegions(
   const rows: Record<string, RowFieldWithPosition>[] = [];
   const rmap: Record<string, string>[] = [];
   const rmapcolor: Record<string, string> = {};
+  const rmaphits: Record<string, number> = {};
   const gates = convertGatesToStringifyDictionary(data);
 
   for (let j = 0; j < Number(data.n); j++) {
@@ -265,6 +273,8 @@ export function getRowsAndRegions(
       if (!rmapcolor[rname])
         rmapcolor[rname] =
           colorList[Object.keys(rmapcolor).length % colorList.length];
+      if (!rmaphits[rname]) rmaphits[rname] = 1;
+      else rmaphits[rname] += 1;
     }
 
     // for selectors
@@ -278,6 +288,8 @@ export function getRowsAndRegions(
         if (!rmapcolor[rname])
           rmapcolor[rname] =
             colorList[Object.keys(rmapcolor).length % colorList.length];
+        if (!rmaphits[rname]) rmaphits[rname] = 1;
+        else rmaphits[rname] += 1;
       }
     }
     for (const key in region.enabled_selectors) {
@@ -327,7 +339,15 @@ export function getRowsAndRegions(
       )
       .map((_) => _.name);
   }
-  return { rows, gates, rmap, rmapcolor };
+
+  const regions: RegionInfoEntity = Object.assign(
+    {},
+    rmapcolor
+  ) as unknown as RegionInfoEntity;
+  Object.keys(regions).forEach(function (key) {
+    regions[key] = { color: rmapcolor[key], hits: rmaphits[key] };
+  });
+  return { rows, gates, rmap, rmapcolor, regions };
 }
 
 function prettifyCell(

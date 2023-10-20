@@ -10,9 +10,12 @@
       />
 
       <table>
-        <tr v-for="(c, k) in rmapcolor" :key="k">
+        <tr v-for="({ color: c, hits }, k) in regions" :key="k">
           <td :style="`border: 1px solid ${c};`">
             {{ k }}
+          </td>
+          <td>
+            {{ hits }}
           </td>
         </tr>
       </table>
@@ -28,7 +31,12 @@
         <template v-slot:body-cell-expressions="props">
           <q-td :props="props">
             <p v-for="(g, i) in gates[props.value]" :key="i">
-              <q-badge v-if="g.name" color="cyan-7" :label="g.name" class="q-mr-sm"></q-badge>
+              <q-badge
+                v-if="g.name"
+                color="cyan-7"
+                :label="g.name"
+                class="q-mr-sm"
+              ></q-badge>
               <span class="gate_hljs" v-html="g.literal"></span>
             </p>
           </q-td>
@@ -115,6 +123,7 @@ import {
   RowFieldWithPosition,
   getPermutationLines,
   GateLiteralExpression,
+  RegionInfoEntity,
 } from 'src/services/ConstraintSystem';
 import { registerGateLanguage } from 'src/services/GateLanguage';
 import hljs from 'highlight.js';
@@ -180,6 +189,7 @@ function toggleConstraints() {
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<string, string>[]> = ref([]);
 const rmapcolor: Ref<Record<string, string>> = ref({});
+const regions: Ref<RegionInfoEntity> = ref({});
 
 const gates: Ref<Record<string, GateLiteralExpression[]>> = ref({});
 // QTable value don't accept array of field value
@@ -273,6 +283,7 @@ function loadData(data?: MockProverData) {
     rows.value = rr.rows;
     rmap.value = rr.rmap;
     rmapcolor.value = rr.rmapcolor;
+    regions.value = rr.regions;
     gates.value = rr.gates;
     Object.keys(gates.value).forEach(function (key) {
       gates.value[key] = gates.value[key].map((g) => ({
