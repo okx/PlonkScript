@@ -54,6 +54,11 @@
         :pagination="pagination"
         :hide-pagination="true"
       >
+        <template v-slot:body-cell-index="props">
+          <q-td>
+            {{ props.value.index }}
+          </q-td>
+        </template>
         <template v-slot:body-cell="props">
           <q-td
             :props="props"
@@ -148,6 +153,8 @@ function getColorByColName(col: string): string {
     ? 'indigo-2'
     : col == 'gate'
     ? 'cyan-2'
+    : col == 'inde'
+    ? 'bluegrey-2'
     : 'negative';
 }
 

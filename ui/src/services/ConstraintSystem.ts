@@ -7,7 +7,8 @@ export type RowFieldType =
   | 'Instance'
   | 'Poison'
   | 'Selector'
-  | 'Gates';
+  | 'Gates'
+  | 'Index';
 export interface RowField {
   type: RowFieldType;
   raw?: string;
@@ -216,6 +217,13 @@ export function getColumnDefinition(data: MockProverData): ColumnDefinition[] {
 }
 export function getColumns(cols: ColumnDefinition[]): QTableColumn[] {
   const columns: QTableColumn[] = [];
+  columns.push({
+    name: 'index',
+    label: 'idx',
+    align: 'center',
+    field: 'index',
+    sortable: false,
+  });
 
   for (let k = 0; k < cols.length; k++) {
     const col = cols[k];
@@ -300,6 +308,7 @@ export function getRowsAndRegions(
 
   for (let j = 0; j < Number(data.n); j++) {
     const obj: Record<string, RowFieldWithPosition> = {};
+    obj.index = { index: j, region: 'BUILTIN-INDEX', type: 'Index' };
     for (let k = 0; k < cols.length; k++) {
       const col = cols[k];
 
