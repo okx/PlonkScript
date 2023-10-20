@@ -120,19 +120,20 @@ function quoteIfIncludeAddSub(exp: string): string {
 export function stringifyGate(polys: PolynomialExpression): string {
   if (Array.isArray(polys)) {
     if (polys[0] == 'Constant') return BigInt(polys[1]).toString();
-    if (polys[0] == 'Negated') return `-${stringifyGate(polys[1])}`;
+    if (polys[0] == 'Negated') return ` - ${stringifyGate(polys[1])}`;
     if (polys[0] == 'Sum') {
       const second = stringifyGate(polys[2]);
       return `${stringifyGate(polys[1])}${
-        second.startsWith('-') ? '' : '+'
+        second.startsWith(' -') ? '' : ' + '
       }${second}`;
     }
     if (polys[0] == 'Product') {
       return `${quoteIfIncludeAddSub(
         stringifyGate(polys[1])
-      )}*${quoteIfIncludeAddSub(stringifyGate(polys[2]))}`;
+      )} * ${quoteIfIncludeAddSub(stringifyGate(polys[2]))}`;
     }
-    if (polys[0] == 'Scaled') return `${stringifyGate(polys[1])}^^^${polys[2]}`;
+    if (polys[0] == 'Scaled')
+      return `${stringifyGate(polys[1])} * ${shortenGateValue(polys[2])}`;
   }
 
   // console.log('object polys', polys);
@@ -374,6 +375,20 @@ function shortenCellValue(value: string): string {
         '..' +
         value.substring(value.length - 2, value.length)
       );
+    }
+
+    return value;
+  } catch (e) {
+    console.warn('cannot process value', value, e);
+    return value;
+  }
+}
+
+function shortenGateValue(value: string): string {
+  try {
+    const v = BigInt(value);
+    if (v <= 9999999) {
+      return v.toString();
     }
 
     return value;

@@ -25,6 +25,11 @@
         :pagination="pagination"
         :hide-pagination="true"
       >
+        <template v-slot:body-cell-desc="props">
+          <q-td :props="props">
+            <div class="gate_hljs" v-html="props.value"></div>
+          </q-td>
+        </template>
       </q-table>
     </div>
     <div class="q-pa-md row">
@@ -107,6 +112,9 @@ import {
   RowFieldWithPosition,
   getPermutationLines,
 } from 'src/services/ConstraintSystem';
+import { registerGateLanguage } from 'src/services/GateLanguage';
+import hljs from 'highlight.js';
+registerGateLanguage();
 
 export interface ConstraintsVisualizationProps {
   data?: MockProverData;
@@ -262,7 +270,7 @@ function loadData(data?: MockProverData) {
     gates.value = rr.gates;
     gatesArray.value = Object.keys(rr.gates).map((_) => ({
       name: _,
-      desc: rr.gates[_],
+      desc: hljs.highlight(rr.gates[_], { language: 'gate' }).value,
     }));
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -299,6 +307,30 @@ $pos: left, right, top, bottom;
 
   .cell_border_#{$p} {
     border-#{$p}-width: 1px;
+  }
+}
+
+.gate_hljs {
+  :deep(.hljs-fixed) {
+    color: $light-blue-7;
+  }
+  :deep(.hljs-advice) {
+    color: $deep-orange-7;
+  }
+  :deep(.hljs-hex) {
+    color: $teal-8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 6rem;
+    display: inline-block;
+    vertical-align: bottom;
+  }
+  :deep(.hljs-prev-rotation) {
+    color: $green-14;
+  }
+  :deep(.hljs-next-rotation) {
+    color: $indigo-14;
   }
 }
 </style>
