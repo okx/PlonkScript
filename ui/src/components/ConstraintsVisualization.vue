@@ -25,9 +25,12 @@
         :pagination="pagination"
         :hide-pagination="true"
       >
-        <template v-slot:body-cell-desc="props">
+        <template v-slot:body-cell-expressions="props">
           <q-td :props="props">
-            <div class="gate_hljs" v-html="props.value"></div>
+            <p v-for="(g, i) in gates[props.value]" :key="i">
+              <q-badge v-if="g.name" color="cyan-7" :label="g.name" class="q-mr-sm"></q-badge>
+              <span class="gate_hljs" v-html="g.literal"></span>
+            </p>
           </q-td>
         </template>
       </q-table>
@@ -111,6 +114,7 @@ import {
   getRowsAndRegions,
   RowFieldWithPosition,
   getPermutationLines,
+  GateLiteralExpression,
 } from 'src/services/ConstraintSystem';
 import { registerGateLanguage } from 'src/services/GateLanguage';
 import hljs from 'highlight.js';
@@ -176,8 +180,10 @@ function toggleConstraints() {
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<string, string>[]> = ref([]);
 const rmapcolor: Ref<Record<string, string>> = ref({});
-const gates: Ref<Record<string, string>> = ref({});
-const gatesArray: Ref<Array<{ name: string; desc: string }>> = ref([]);
+
+const gates: Ref<Record<string, GateLiteralExpression[]>> = ref({});
+// QTable value don't accept array of field value
+const gatesArray: Ref<Array<{ name: string; expressions: string }>> = ref([]);
 
 function getBorderOfRegion(
   row: RowFieldWithPosition,
@@ -268,9 +274,16 @@ function loadData(data?: MockProverData) {
     rmap.value = rr.rmap;
     rmapcolor.value = rr.rmapcolor;
     gates.value = rr.gates;
+    Object.keys(gates.value).forEach(function (key) {
+      gates.value[key] = gates.value[key].map((g) => ({
+        name: g.name,
+        literal: hljs.highlight(g.literal, { language: 'gate' }).value,
+      }));
+    });
+
     gatesArray.value = Object.keys(rr.gates).map((_) => ({
       name: _,
-      desc: hljs.highlight(rr.gates[_], { language: 'gate' }).value,
+      expressions: _,
     }));
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];

@@ -109,6 +109,11 @@ export interface MockProverDataPermutation {
   sizes: string[][];
 }
 
+export interface GateLiteralExpression {
+  name: string;
+  literal: string;
+}
+
 function quoteIfIncludeAddSub(exp: string): string {
   if (exp.indexOf('+') >= 0 || exp.indexOf('-') >= 0) {
     return `(${exp})`;
@@ -120,7 +125,18 @@ function quoteIfIncludeAddSub(exp: string): string {
 export function stringifyGate(polys: PolynomialExpression): string {
   if (Array.isArray(polys)) {
     if (polys[0] == 'Constant') return BigInt(polys[1]).toString();
-    if (polys[0] == 'Negated') return ` - ${stringifyGate(polys[1])}`;
+    if (polys[0] == 'Negated') {
+      const inner = stringifyGate(polys[1]);
+      if (
+        inner.indexOf('+') >= 0 ||
+        inner.indexOf('-') >= 0 ||
+        inner.indexOf('*') >= 0
+      ) {
+        return ` - (${inner})`;
+      }
+      return ` - ${inner}`;
+    }
+
     if (polys[0] == 'Sum') {
       const second = stringifyGate(polys[2]);
       return `${stringifyGate(polys[1])}${
@@ -145,13 +161,13 @@ export function stringifyGate(polys: PolynomialExpression): string {
 
 export function convertGatesToStringifyDictionary(
   data: MockProverData
-): Record<string, string> {
-  const gates: Record<string, string> = {};
+): Record<string, GateLiteralExpression[]> {
+  const gates: Record<string, GateLiteralExpression[]> = {};
   for (let i = 0; i < data.cs.gates.length; i++) {
     const gate = data.cs.gates[i];
     gates[gate.name] = gate.polys
       .map((poly) => stringifyGate(poly as PolynomialExpression))
-      .join(', ');
+      .map((literal, idx) => ({ literal, name: gate.constraint_names[idx] }));
   }
 
   return gates;
