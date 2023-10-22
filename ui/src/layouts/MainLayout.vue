@@ -13,7 +13,25 @@
 
         <q-toolbar-title> Plonk Script </q-toolbar-title>
 
-        <div>Demo Version</div>
+        <q-btn
+          stretch
+          :flat="$route.name != 'editor'"
+          label="Editor"
+          :to="{ name: 'editor' }"
+          class="menu-button"
+          :class="{ active: $route.name === 'editor' }"
+        />
+        <!-- <q-separator dark vertical inset /> -->
+        <q-btn
+          stretch
+          :flat="$route.name != 'analyzer'"
+          label="Analyzer"
+          :to="{ name: 'analyzer' }"
+          class="menu-button"
+          :class="{ active: $route.name === 'analyzer' }"
+        />
+
+        <!-- <div>Demo Version</div> -->
       </q-toolbar>
     </q-header>
 
@@ -46,3 +64,13 @@
 <script setup lang="ts">
 //
 </script>
+
+<style lang="scss" scoped>
+.menu-button.q-btn {
+  background-color: $primary;
+
+  &.active {
+    background-color: darken($primary, 10);
+  }
+}
+</style>

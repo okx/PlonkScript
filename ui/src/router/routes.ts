@@ -5,8 +5,17 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '/legacy', component: () => import('pages/IndexPage.vue') },
-      { path: '', component: () => import('pages/EditorPage.vue') },
+      {
+        name: 'analyzer',
+        path: '/analyzer',
+        component: () => import('pages/AnalyzerPage.vue'),
+      },
+      {
+        name: 'editor',
+        path: '/editor',
+        component: () => import('pages/EditorPage.vue'),
+      },
+      { path: '/', redirect: '/editor' },
     ],
   },
 
