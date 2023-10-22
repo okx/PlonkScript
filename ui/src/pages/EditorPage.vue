@@ -1,6 +1,11 @@
 <template>
   <q-page class="">
-    <q-splitter v-model="splitPercent" style="height: 90vh">
+    <q-splitter
+      v-model="splitPercent"
+      style="height: 90vh"
+      @update:model-value="updatePanel()"
+      :limits="[0, Infinity]"
+    >
       <template v-slot:before>
         <div class="q-pa-md">
           <div id="editorRef" ref="editorRef" style="height: 80vh"></div>
@@ -74,10 +79,12 @@ out <== c[N-1];
 `;
 const vis: Ref<MockProverData | undefined> = ref(undefined);
 
+let editor: monaco.editor.IStandaloneCodeEditor | undefined = undefined;
+
 setTimeout(() => {
   if (editorRef.value) {
     // console.log('combine');
-    const editor = monaco.editor.create(editorRef.value as HTMLElement, {
+    editor = monaco.editor.create(editorRef.value as HTMLElement, {
       value: code,
       language: 'plonkscript',
       // theme: 'vs-dark',
@@ -115,4 +122,9 @@ setTimeout(() => {
 }, 300);
 
 init();
+
+function updatePanel() {
+  if (!editor) return;
+  editor.layout();
+}
 </script>
