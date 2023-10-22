@@ -280,6 +280,7 @@ function loadData(data?: MockProverData) {
   // console.log(data);
   rows.value = [];
   columns.value = [];
+  gatesArray.value = [];
 
   setTimeout(() => {
     const cols = getColumnDefinition(data);

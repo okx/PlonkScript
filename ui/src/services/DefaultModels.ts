@@ -1,4 +1,4 @@
-import o0 from '../assets/output.json';
+// import o0 from '../assets/output.json';
 import o1 from '../assets/simple_example.json';
 import o2 from '../assets/fib1.json';
 import o3 from '../assets/fib2.json';
@@ -7,6 +7,7 @@ import o5 from '../assets/fib4.json';
 import o6 from '../assets/range_check1.json';
 import o7 from '../assets/range_check2.json';
 import o8 from '../assets/range_check3_broken.json';
+import o9 from '../assets/merkle_path_poseidon.json';
 import { MockProverData } from './ConstraintSystem';
 
 export interface IDataModel {
@@ -18,12 +19,12 @@ export interface IDataModel {
 }
 
 export const dataList: IDataModel[] = [
-  {
-    name: 'Latest',
-    data: o0 as unknown as MockProverData,
-    title: 'Latest Model',
-    description: 'Debug used latest model',
-  },
+  // {
+  //   name: 'Latest',
+  //   data: o0 as unknown as MockProverData,
+  //   title: 'Latest Model',
+  //   description: 'Debug used latest model',
+  // },
   {
     name: 'Simple',
     data: o1 as unknown as MockProverData,
@@ -79,5 +80,12 @@ export const dataList: IDataModel[] = [
     title: 'Range Check Example 3',
     description: 'Simple range check example from halo workshop',
     sourceUrl: 'https://github.com/icemelon/halo2-examples/blob/master/src/range_check/example3_broken.rs',
+  },
+  {
+    name: 'MerklePath',
+    data: o9 as unknown as MockProverData,
+    title: 'Merkle Path(Poseidon)',
+    description: 'Merkle path in poseidon hash in semaphore repo',
+    sourceUrl: 'https://github.com/akinovak/halo2-semaphore',
   },
 ];
