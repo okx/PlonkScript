@@ -1,0 +1,25 @@
+{
+  "name": "plonkscript-vscode",
+  "displayName": "plonkscript-vscode",
+  "description": "plonkscript support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.83.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "plonkscript",
+      "aliases": ["PlonkScript", "plonkscript"],
+      "extensions": [".plonk",".rps"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "plonkscript",
+      "scopeName": "source.plonkscript",
+      "path": "./syntaxes/plonkscript.tmLanguage.json"
+    }]
+  }
+}

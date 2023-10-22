@@ -40,6 +40,15 @@
             },
             "args": [],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}/vscode-ext"
+            ],
+            "cwd": "${workspaceFolder}/vscode-ext"
         }
     ]
 }
