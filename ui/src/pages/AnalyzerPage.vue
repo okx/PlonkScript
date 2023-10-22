@@ -6,10 +6,10 @@
           v-model="modelSelection"
           push
           toggle-color="primary"
-          :options="dataList.map((_) => ({ label: _.name, value: _ }))"
+          :options="([{ label: 'Custom', value: undefined }] as any).concat(dataList.map((_) => ({ label: _.name, value: _ })))"
         />
       </div>
-      <q-card v-if="modelSelection" class="">
+      <q-card v-if="modelSelection && modelSelection.name != 'Custom'" class="">
         <q-card-section>
           <div v-if="modelSelection?.title" class="text-h6">
             {{ modelSelection.title }}
@@ -33,6 +33,33 @@
           >
         </q-card-actions>
       </q-card>
+
+      <q-card v-else class="">
+        <q-card-section>
+          <div class="text-h6">Custom</div>
+        </q-card-section>
+
+        <q-card-section>
+          Select custom model which produced by the MockProver, inject your code
+          like:
+          <pre>
+let d = format!("{:#?}", prover);
+let mut file = std::fs::File::create("data.rust").unwrap();
+std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
+          >
+
+          PS: this is client-only processing, no data is transfered to the
+          server.
+        </q-card-section>
+        <q-separator />
+        <q-card-actions>
+          <q-uploader
+            label="Select the debug output"
+            ref="uploaderRef"
+            @added="onFileAdded"
+          />
+        </q-card-actions>
+      </q-card>
     </div>
 
     <ConstraintsVisualization :data="modelSelection?.data" />
@@ -44,7 +71,35 @@ import { Ref, ref } from 'vue';
 import { matOpenInNew } from '@quasar/extras/material-icons';
 import { IDataModel, dataList } from 'src/services/DefaultModels';
 import ConstraintsVisualization from '../components/ConstraintsVisualization.vue';
+import { QUploader } from 'quasar';
+import { useQuasar } from 'quasar';
+import { convertMockProverOutputToObject } from 'src/services/MockProverTranslator';
+
+const $q = useQuasar();
 
 const modelSelection: Ref<IDataModel | undefined> = ref(undefined);
-modelSelection.value = dataList[0];
+const uploaderRef: Ref<QUploader | null> = ref(null);
+
+function onFileAdded(files: readonly File[]) {
+  var reader = new FileReader();
+  reader.onload = function (event) {
+    uploaderRef.value?.reset();
+    const result = event.target?.result;
+    if (
+      !result ||
+      typeof result != 'string' ||
+      !result.startsWith('MockProver')
+    ) {
+      $q.notify({
+        message: 'Invalid file, only MockProver debug output is supported.',
+        type: 'negative',
+      });
+      return;
+    }
+
+    const data = convertMockProverOutputToObject(result);
+    modelSelection.value = { name: 'Custom', data };
+  };
+  reader.readAsText(files[0]);
+}
 </script>
