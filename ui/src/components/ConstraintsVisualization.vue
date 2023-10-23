@@ -369,7 +369,7 @@ $pos: left, right, top, bottom;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 6rem;
+    max-width: 6rem;
     display: inline-block;
     vertical-align: bottom;
   }

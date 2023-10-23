@@ -158,7 +158,8 @@ export function stringifyGate(polys: PolynomialExpression): string {
     }
     if (polys[0] == 'Scaled')
       return `${stringifyGate(polys[1])} * ${shortenGateValue(polys[2])}`;
-    if (polys[0] == 'SelectorExpression') // special type from tiny-ram-halo2
+    if (polys[0] == 'SelectorExpression')
+      // special type from tiny-ram-halo2
       return `{${stringifyGate(polys[1])}}`;
   }
 
@@ -411,35 +412,31 @@ function prettifyCell(
 }
 
 function shortenCellValue(value: string): string {
-  try {
-    const v = BigInt(value);
-    if (v <= 9999999) {
-      return v.toString();
-    }
-
-    if (value.length > 8) {
-      return (
-        value.substring(0, 4) +
-        '..' +
-        value.substring(value.length - 2, value.length)
-      );
-    }
-
-    return value;
-  } catch (e) {
-    console.warn('cannot process value', value, e);
-    return value;
-  }
+  return tryShortenValue(value, 8);
 }
 
 function shortenGateValue(value: string): string {
+  return tryShortenValue(value, 1000);
+}
+
+function tryShortenValue(value: string, maxLength: number): string {
   try {
     const v = BigInt(value);
     if (v <= 9999999) {
       return v.toString();
     }
 
-    return value;
+    const short = value.replace(/0x(0+)/g, '0x');
+
+    if (short.length > maxLength) {
+      return (
+        short.substring(0, 4) +
+        '..' +
+        short.substring(short.length - 2, short.length)
+      );
+    }
+
+    return short;
   } catch (e) {
     console.warn('cannot process value', value, e);
     return value;
