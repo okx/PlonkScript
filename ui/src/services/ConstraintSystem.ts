@@ -177,7 +177,11 @@ export function convertGatesToStringifyDictionary(
   const gates: Record<string, GateLiteralExpression[]> = {};
   for (let i = 0; i < data.cs.gates.length; i++) {
     const gate = data.cs.gates[i];
-    gates[gate.name] = gate.polys
+    const name =
+      Object.keys(gates).indexOf(gate.name) > -1
+        ? `${gate.name} - ${i}`
+        : gate.name;
+    gates[name] = gate.polys
       .map((poly) => stringifyGate(poly as PolynomialExpression))
       .map((literal, idx) => ({ literal, name: gate.constraint_names[idx] }));
   }
