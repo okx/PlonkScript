@@ -3,9 +3,14 @@ import { MockProverData } from './ConstraintSystem';
 export function convertMockProverOutputToObject(
   content: string
 ): MockProverData {
+  return JSON.parse(convertMockProverOutputToJson(content)) as MockProverData;
+}
+
+export function convertMockProverOutputToJson(content: string): string {
   // protect original string
   const pairs: Record<string, string> = {};
-  const reString = /".*[\{\}\[\]\(\)]+.*"/g;
+  // const reString = /".*[\{\}\[\]\(\)]+.*"/g;
+  const reString = /".*"/g;
   const matches = content.matchAll(reString);
   for (const m of matches) {
     const rnd = `"${Math.random()}"`;
@@ -48,5 +53,5 @@ export function convertMockProverOutputToObject(
     }
   }
 
-  return JSON.parse(content) as MockProverData;
+  return content;
 }

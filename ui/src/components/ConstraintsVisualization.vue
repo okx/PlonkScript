@@ -52,7 +52,7 @@
         bordered
         dense
         :pagination="pagination"
-        :hide-pagination="true"
+        :hide-pagination="rows.length <= MAXROWS"
       >
         <template v-slot:body-cell-index="props">
           <q-td>
@@ -176,9 +176,11 @@ function getColorByType(type: RowFieldType, value = ''): string {
     : 'negative';
 }
 
+const MAXROWS = ref(1024);
+
 const pagination = ref({
   page: 1,
-  rowsPerPage: -1,
+  rowsPerPage: MAXROWS.value,
 });
 const columns: Ref<QTableColumn[]> = ref([]);
 
@@ -233,6 +235,13 @@ const cellBadges = ref<Record<string, Record<string, Element>>>({});
 const lines: LeaderLine[] = [];
 
 function drawLines(data: MockProverData) {
+  if (rows.value.length > 1024) {
+    console.warn(
+      `rows is too many [${rows.value.length}], skip drawing permutation lines`
+    );
+    return;
+  }
+
   const plines = getPermutationLines(
     data,
     cellBadges.value,
@@ -240,6 +249,12 @@ function drawLines(data: MockProverData) {
     rows.value
   );
 
+  if (plines.length > 500) {
+    console.warn(
+      `permutation lines is too many [${plines.length}], skip drawing`
+    );
+    return;
+  }
   for (let i = 0; i < plines.length; i++) {
     const { fromValue, toValue, from, to } = plines[i];
 
