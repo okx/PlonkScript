@@ -53,11 +53,27 @@ std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
         </q-card-section>
         <q-separator />
         <q-card-actions>
-          <q-uploader
-            label="Select the debug output"
-            ref="uploaderRef"
-            @added="onFileAdded"
-          />
+          <q-uploader ref="uploaderRef" :multiple="false" @added="onFileAdded">
+            <template v-slot:header="scope">
+              <div class="row no-wrap items-center q-pa-sm q-gutter-xs">
+                <div class="col">
+                  <div class="q-uploader__title">Select the debug output</div>
+                </div>
+                <q-btn
+                  v-if="scope.canAddFiles"
+                  type="a"
+                  icon="add_box"
+                  @click="scope.pickFiles"
+                  round
+                  dense
+                  flat
+                >
+                  <q-uploader-add-trigger />
+                  <q-tooltip>Pick Files</q-tooltip>
+                </q-btn>
+              </div>
+            </template>
+          </q-uploader>
         </q-card-actions>
       </q-card>
     </div>
