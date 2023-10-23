@@ -158,10 +158,13 @@ export function stringifyGate(polys: PolynomialExpression): string {
     }
     if (polys[0] == 'Scaled')
       return `${stringifyGate(polys[1])} * ${shortenGateValue(polys[2])}`;
+    if (polys[0] == 'SelectorExpression') // special type from tiny-ram-halo2
+      return `{${stringifyGate(polys[1])}}`;
   }
 
   // console.log('object polys', polys);
 
+  if (!polys.rotation) console.warn('wrong rotation', polys);
   //TODO: standardize column name getting
   const rotationHint = polys.rotation[1] == '0' ? '' : `[${polys.rotation[1]}]`;
   return `${polys.type[0].toLowerCase()}_${polys.column_index}${rotationHint}`;
