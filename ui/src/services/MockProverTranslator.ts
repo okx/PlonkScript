@@ -33,16 +33,35 @@ export function convertMockProverOutputToJson(content: string): string {
   content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
 
   content = content.replaceAll(/([\w\d]+) ?{/g, '{ type: $1,');
+
+  // combine hash map of tuple and array
   content = content.replaceAll('): [', '');
 
   content = content.replaceAll(/([\w\d]+)\(/g, '[ "$1",');
+
+  // quote range value
+  content = content.replace(/(\d+\.\.\d+)/g, '"$1"');
+
+  // quote special number like: 17049590034418533166 + 12587749074617431523*a,
+  content = content.replace(/(\d+ \+ \d+\*a)/g, '"$1"');
+
+  // convert brackets
   content = content.replaceAll(/\(/g, '[');
   content = content.replaceAll(/\)/g, ']');
 
+  // standardize quoted key
   content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
+
+  // quote value to string
   content = content.replace(/:\s*([\w\d\.]+)/g, ': "$1"');
+
+  // remove trailing comma
   content = content.replace(/,(\s*[\}\]])/g, '$1');
+
+  // hex to string
   content = content.replace(/(0x[\da-f]+)/g, '"$1"');
+
+  // prop key to string
   content = content.replace(/^(\s*)([\w\d]+)/gm, '$1"$2"');
 
   // restore protected string
