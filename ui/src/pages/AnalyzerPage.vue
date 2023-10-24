@@ -53,12 +53,7 @@ std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
         </q-card-section>
         <q-separator />
         <q-card-actions>
-          <q-uploader
-            ref="uploaderRef"
-            :multiple="false"
-            @added="onFileAdded"
-            max-file-size="15000000"
-          >
+          <q-uploader ref="uploaderRef" :multiple="false" @added="onFileAdded">
             <template v-slot:header="scope">
               <div class="row no-wrap items-center q-pa-sm q-gutter-xs">
                 <div class="col">
