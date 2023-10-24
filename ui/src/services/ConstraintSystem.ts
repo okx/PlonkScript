@@ -425,6 +425,14 @@ function shortenGateValue(value: string): string {
 
 function tryShortenValue(value: string, maxLength: number): string {
   try {
+    // special case from halo2-cairo
+    if (typeof value === 'object' && value[0] === 'Trivial') value = value[1];
+    if (typeof value === 'object' && value[0] === 'Rational')
+      return `${tryShortenValue(value[1], maxLength)}+${tryShortenValue(
+        value[2],
+        maxLength
+      )}i`;
+
     const v = BigInt(value);
     if (v <= 9999999) {
       return v.toString();
