@@ -21,6 +21,7 @@ export function convertMockProverOutputToJson(content: string): string {
   // combine hash map of tuple and array
   content = content.replaceAll('): [', '');
   content = content.replaceAll(/^(\s*)\): (\d+),/gm, '$1    $2\n$1),');
+  content = content.replaceAll(/\}: "(.*)",/g, '"value": "$1" }');
 
   // convert `columns` set to array
   content = content.replaceAll(
@@ -34,10 +35,16 @@ export function convertMockProverOutputToJson(content: string): string {
     '$1[$2            ]'
   );
 
-  // convert `celss` set to array
+  // convert `cells` set to array
   content = content.replaceAll(
     /(cells: )\{(\n(?: {16}.*\n)+)( {12}})/g,
     '$1[$2            ]'
+  );
+
+  // convert `general_column_annotations` set to array
+  content = content.replaceAll(
+    /(general_column_annotations: )\{(\n(?: {12}.*\n)+)( {8}})/g,
+    '$1[$2        ]'
   );
 
   content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
