@@ -157,7 +157,9 @@ export function stringifyGate(polys: PolynomialExpression): string {
       )} * ${quoteIfIncludeAddSub(stringifyGate(polys[2]))}`;
     }
     if (polys[0] == 'Scaled')
-      return `${stringifyGate(polys[1])} * ${shortenGateValue(polys[2])}`;
+      return `${quoteIfIncludeAddSub(
+        stringifyGate(polys[1])
+      )} * ${quoteIfIncludeAddSub(shortenGateValue(polys[2]))}`;
     if (polys[0] == 'SelectorExpression')
       // special type from tiny-ram-halo2
       return `{${stringifyGate(polys[1])}}`;
