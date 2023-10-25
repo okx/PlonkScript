@@ -123,7 +123,11 @@ export interface GateLiteralExpression {
 }
 
 function quoteIfIncludeAddSub(exp: string): string {
-  if (exp.indexOf('+') >= 0 || exp.indexOf('-') >= 0) {
+  let rm = exp;
+  while (rm.indexOf('(') >= 0) {
+    rm = rm.replaceAll(/\([^\(\)]*?\)/g, '');
+  }
+  if (rm.indexOf('+') >= 0 || rm.indexOf('-') >= 0) {
     return `(${exp})`;
   }
 
