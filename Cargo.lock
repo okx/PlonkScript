@@ -643,6 +643,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "halo2_summarizer"
+version = "0.1.0"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1527,6 +1534,7 @@ name = "transpiler"
 version = "0.1.0"
 dependencies = [
  "halo2_proofs",
+ "halo2_summarizer",
  "once_cell",
  "regex",
  "rhai",
