@@ -9,4 +9,3 @@ homepage = "https://plonk.pro"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-regex = "*"

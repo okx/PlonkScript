@@ -645,9 +645,6 @@ dependencies = [
 [[package]]
 name = "halo2_summarizer"
 version = "0.1.0"
-dependencies = [
- "regex",
-]
 
 [[package]]
 name = "hashbrown"
