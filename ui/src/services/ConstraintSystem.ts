@@ -40,6 +40,8 @@ export type CellValue = string[] | string;
 
 export interface MockProverData {
   type: string;
+  start?: string;
+  end?: string;
   k: string;
   n: string;
   cs: ConstraintSystem;
@@ -273,8 +275,10 @@ export function getRowsAndRegions(
   const rmapcolor: Record<string, string> = {};
   const rmaphits: Record<string, number> = {};
   const gates = convertGatesToStringifyDictionary(data);
+  data.start = data.start || '0';
+  data.end = data.end || data.n;
 
-  for (let j = 0; j < Number(data.n); j++) {
+  for (let j = Number(data.start); j < Number(data.end); j++) {
     const rrow: Record<string, string> = {};
     rmap.push(rrow);
   }
@@ -320,7 +324,7 @@ export function getRowsAndRegions(
     }
   }
 
-  for (let j = 0; j < Number(data.n); j++) {
+  for (let j = Number(data.start); j < Number(data.end); j++) {
     const obj: Record<string, RowFieldWithPosition> = {};
     obj.index = { index: j, region: 'BUILTIN-INDEX', type: 'Index' };
     for (let k = 0; k < cols.length; k++) {
@@ -479,6 +483,8 @@ export function getPermutationLines(
   );
 
   const mapping = data.permutation.mapping;
+  // ignore mapping when it's large
+  if (mapping.reduce((pv, cv) => pv + cv.length, 0) > 500) return [];
   const cols = data.permutation.columns;
   const lines = [];
 
