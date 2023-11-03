@@ -39,6 +39,11 @@ pub fn trim_start_end(mock_prover_output: &String, start: i32, end: i32) -> Stri
                         status = ReadingStatus::Inside("cells".to_string(), format!("{SPACE12}],"));
                         inside_strs = Vec::<&str>::new();
                     }
+                    "            cells: {" => {
+                        status =
+                            ReadingStatus::Inside("cells".to_string(), format!("{SPACE12}}},"));
+                        inside_strs = Vec::<&str>::new();
+                    }
                     "    fixed: [" | "    advice: [" | "    instance: [" | "    selectors: [" => {
                         status =
                             ReadingStatus::Inside("columns".to_string(), format!("{SPACE4}],"));
@@ -47,6 +52,11 @@ pub fn trim_start_end(mock_prover_output: &String, start: i32, end: i32) -> Stri
                     "        mapping: [" => {
                         status =
                             ReadingStatus::Inside("mapping".to_string(), format!("{SPACE8}],"));
+                        inside_strs = Vec::<&str>::new();
+                    }
+                    "            enabled_selectors: {" => {
+                        status =
+                            ReadingStatus::Inside("selectors".to_string(), format!("{SPACE12}}},"));
                         inside_strs = Vec::<&str>::new();
                     }
                     "        aux: [" | "        sizes: [" => {
@@ -90,6 +100,15 @@ pub fn trim_start_end(mock_prover_output: &String, start: i32, end: i32) -> Stri
                                 s.push_str("\n");
                             }
                         }
+                        "selectors" => {
+                            let mut tmp = Vec::<&str>::new();
+                            std::mem::swap(&mut tmp, &mut inside_strs);
+
+                            for l in trim_selectors(tmp, start, end) {
+                                s.push_str(l);
+                                s.push_str("\n");
+                            }
+                        }
                         "remove" => (),
                         _ => (),
                     }
@@ -117,8 +136,6 @@ fn trim_cells(lines: Vec<&str>, start: i32, end: i32) -> Vec<&str> {
             .trim()
             .parse::<i32>()
             .unwrap();
-
-        // println!("{}, {}", row, pos);
 
         if row >= start && row < end {
             for i in 0..7 {
@@ -218,6 +235,36 @@ fn trim_mapping(lines: Vec<&str>, start: i32, end: i32) -> Vec<&str> {
 
         pos += count;
         line_num += 1;
+    }
+
+    arr
+}
+
+fn trim_selectors(lines: Vec<&str>, start: i32, end: i32) -> Vec<&str> {
+    let mut arr = Vec::<&str>::new();
+    let mut pos = 0;
+
+    while pos < lines.len() {
+        if lines[pos] == format!("{SPACE16}Selector(") {
+            for i in 0..4 {
+                arr.push(lines[pos + i]);
+            }
+            pos += 4;
+            continue;
+        }
+
+        if lines[pos] == format!("{SPACE16}],") {
+            arr.push(lines[pos]);
+            pos += 1;
+            continue;
+        }
+
+        let row = lines[pos].trim_matches(',').trim().parse::<i32>().unwrap();
+
+        if row >= start && row < end {
+            arr.push(lines[pos]);
+        }
+        pos += 1;
     }
 
     arr
