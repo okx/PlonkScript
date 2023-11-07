@@ -68,9 +68,14 @@ export interface ConstraintSystem {
   instance_queries: ColumnType[][];
   fixed_queries: ColumnType[][];
   permutation: PermutationType;
-  lookups?: undefined;
+  lookups: LookupType[];
   constants: ColumnType[];
   minimum_degree: string;
+}
+export interface LookupType {
+  type: 'Argument';
+  input_expressions: PolynomialExpression[];
+  table_expressions: PolynomialExpression[];
 }
 export interface ColumnType {
   type: 'Column';
@@ -122,6 +127,11 @@ export interface MockProverDataPermutation {
 export interface GateLiteralExpression {
   name: string;
   literal: string;
+}
+
+export interface LookupLiteralExpression {
+  input_expressions: string[];
+  table_expressions: string[];
 }
 
 function quoteIfIncludeAddSub(exp: string): string {
@@ -195,6 +205,22 @@ export function convertGatesToStringifyDictionary(
   }
 
   return gates;
+}
+
+export function convertLookupsToStringifyDictionary(
+  lookups: LookupType[]
+): LookupLiteralExpression[] {
+  const out: LookupLiteralExpression[] = [];
+  for (let i = 0; i < lookups.length; i++) {
+    const lookup = lookups[i];
+    const l: LookupLiteralExpression = {
+      table_expressions: lookup.table_expressions.map((_) => stringifyGate(_)),
+      input_expressions: lookup.input_expressions.map((_) => stringifyGate(_)),
+    };
+    out.push(l);
+  }
+
+  return out;
 }
 
 interface ColumnDefinition {
@@ -275,6 +301,7 @@ export function getRowsAndRegions(
   const rmapcolor: Record<string, string> = {};
   const rmaphits: Record<string, number> = {};
   const gates = convertGatesToStringifyDictionary(data);
+  const lookups = convertLookupsToStringifyDictionary(data.cs.lookups);
   data.start = data.start || '0';
   data.end = data.end || data.n;
   const start = Number(data.start);
@@ -376,7 +403,7 @@ export function getRowsAndRegions(
   Object.keys(regions).forEach(function (key) {
     regions[key] = { color: rmapcolor[key], hits: rmaphits[key] };
   });
-  return { rows, gates, rmap, rmapcolor, regions };
+  return { rows, gates, rmap, rmapcolor, regions, lookups };
 }
 
 function prettifyCell(

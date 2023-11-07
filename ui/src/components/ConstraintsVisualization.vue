@@ -42,6 +42,23 @@
           </q-td>
         </template>
       </q-table>
+
+      <q-table
+        :rows="lookups"
+        flat
+        bordered
+        dense
+        :pagination="pagination"
+        :hide-pagination="true"
+      >
+        <template v-slot:body-cell="props">
+          <q-td :props="props">
+            <p v-for="(g, i) in props.value" :key="i">
+              <span class="gate_hljs" v-html="g"></span>
+            </p>
+          </q-td>
+        </template>
+      </q-table>
     </div>
     <div class="q-pa-md row">
       <q-table
@@ -129,6 +146,7 @@ import {
   getPermutationLines,
   GateLiteralExpression,
   RegionInfoEntity,
+  LookupLiteralExpression,
 } from 'src/services/ConstraintSystem';
 import { registerGateLanguage } from 'src/services/GateLanguage';
 import hljs from 'highlight.js';
@@ -203,6 +221,8 @@ const regions: Ref<RegionInfoEntity> = ref({});
 const gates: Ref<Record<string, GateLiteralExpression[]>> = ref({});
 // QTable value don't accept array of field value
 const gatesArray: Ref<Array<{ name: string; expressions: string }>> = ref([]);
+
+const lookups: Ref<Array<LookupLiteralExpression>> = ref([]);
 
 function getBorderOfRegion(
   row: RowFieldWithPosition,
@@ -308,6 +328,14 @@ function loadData(data?: MockProverData) {
     rmapcolor.value = rr.rmapcolor;
     regions.value = rr.regions;
     gates.value = rr.gates;
+    lookups.value = rr.lookups.map((l) => ({
+      input_expressions: l.input_expressions.map(
+        (_) => hljs.highlight(_, { language: 'gate' }).value
+      ),
+      table_expressions: l.table_expressions.map(
+        (_) => hljs.highlight(_, { language: 'gate' }).value
+      ),
+    }));
     Object.keys(gates.value).forEach(function (key) {
       gates.value[key] = gates.value[key].map((g) => ({
         name: g.name,
