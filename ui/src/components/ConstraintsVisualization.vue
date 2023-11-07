@@ -196,7 +196,7 @@ function toggleConstraints() {
 }
 
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
-const rmap: Ref<Record<string, string>[]> = ref([]);
+const rmap: Ref<Record<number, Record<string, string>>> = ref({});
 const rmapcolor: Ref<Record<string, string>> = ref({});
 const regions: Ref<RegionInfoEntity> = ref({});
 

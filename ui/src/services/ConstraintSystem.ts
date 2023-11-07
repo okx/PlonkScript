@@ -271,16 +271,18 @@ export function getRowsAndRegions(
   colorList = ['red', 'blue', 'wheat', 'green']
 ) {
   const rows: Record<string, RowFieldWithPosition>[] = [];
-  const rmap: Record<string, string>[] = [];
+  const rmap: Record<number, Record<string, string>> = {};
   const rmapcolor: Record<string, string> = {};
   const rmaphits: Record<string, number> = {};
   const gates = convertGatesToStringifyDictionary(data);
   data.start = data.start || '0';
   data.end = data.end || data.n;
+  const start = Number(data.start);
+  const end = Number(data.end);
 
-  for (let j = Number(data.start); j < Number(data.end); j++) {
+  for (let j = start; j < end; j++) {
     const rrow: Record<string, string> = {};
-    rmap.push(rrow);
+    rmap[j] = rrow;
   }
 
   for (let k = 0; k < data.regions.length; k++) {
@@ -324,7 +326,7 @@ export function getRowsAndRegions(
     }
   }
 
-  for (let j = Number(data.start); j < Number(data.end); j++) {
+  for (let j = start; j < end; j++) {
     const obj: Record<string, RowFieldWithPosition> = {};
     obj.index = { index: j, region: 'BUILTIN-INDEX', type: 'Index' };
     for (let k = 0; k < cols.length; k++) {
@@ -333,13 +335,13 @@ export function getRowsAndRegions(
       for (let i = 0; i < Number(col.num); i++) {
         const cell =
           col.name == 'instance'
-            ? prettifyCell(data.instance[i][j], col.name)
+            ? prettifyCell(data.instance[i][j - start], col.name)
             : col.name == 'advice'
-            ? prettifyCell(data.advice[i][j], col.name)
+            ? prettifyCell(data.advice[i][j - start], col.name)
             : col.name == 'fixed'
-            ? prettifyCell(data.fixed[i][j], col.name)
+            ? prettifyCell(data.fixed[i][j - start], col.name)
             : col.name == 'selector'
-            ? prettifyCell(data.selectors[i][j], col.name)
+            ? prettifyCell(data.selectors[i][j - start], col.name)
             : prettifyCell(undefined, col.name);
         obj[`${col.field}${i}`] = {
           ...cell,
@@ -353,7 +355,7 @@ export function getRowsAndRegions(
       type: 'Gates',
       index: j,
       region: '',
-      value: getGatesDesc(data.selectors.map((_) => _[j])),
+      value: getGatesDesc(data.selectors.map((_) => _[j - start])),
     };
 
     rows.push(obj);
