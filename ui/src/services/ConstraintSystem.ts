@@ -127,6 +127,7 @@ export interface MockProverDataPermutation {
 export interface GateLiteralExpression {
   name: string;
   literal: string;
+  idx: number;
 }
 
 export interface LookupLiteralExpression {
@@ -189,10 +190,12 @@ export function stringifyGate(polys: PolynomialExpression): string {
   return `${polys.type[0].toLowerCase()}_${polys.column_index}${rotationHint}`;
 }
 
-export function convertGatesToStringifyDictionary(
-  data: MockProverData
-): Record<string, GateLiteralExpression[]> {
+export function convertGatesToStringifyDictionary(data: MockProverData): {
+  gates: Record<string, GateLiteralExpression[]>;
+  gateNames: Record<number, string>;
+} {
   const gates: Record<string, GateLiteralExpression[]> = {};
+  const gateNames: Record<number, string> = {};
   for (let i = 0; i < data.cs.gates.length; i++) {
     const gate = data.cs.gates[i];
     const name =
@@ -201,10 +204,16 @@ export function convertGatesToStringifyDictionary(
         : gate.name;
     gates[name] = gate.polys
       .map((poly) => stringifyGate(poly as PolynomialExpression))
-      .map((literal, idx) => ({ literal, name: gate.constraint_names[idx] }));
+      .map((literal, idx) => ({
+        literal,
+        name: gate.constraint_names[idx],
+        idx: i,
+      }));
+
+    gateNames[i] = name;
   }
 
-  return gates;
+  return { gates, gateNames };
 }
 
 export function convertLookupsToStringifyDictionary(
@@ -300,7 +309,7 @@ export function getRowsAndRegions(
   const rmap: Record<number, Record<string, string>> = {};
   const rmapcolor: Record<string, string> = {};
   const rmaphits: Record<string, number> = {};
-  const gates = convertGatesToStringifyDictionary(data);
+  const { gates, gateNames } = convertGatesToStringifyDictionary(data);
   const lookups = convertLookupsToStringifyDictionary(data.cs.lookups);
   data.start = data.start || '0';
   data.end = data.end || data.n;
@@ -390,10 +399,11 @@ export function getRowsAndRegions(
 
   function getGatesDesc(selector: string[]) {
     return data.cs.gates
+      .map((_, i) => ({ gate: _, idx: i }))
       .filter((_) =>
-        _.queried_selectors.some((s) => selector[Number(s[1])] == 'true')
+        _.gate.queried_selectors.some((s) => selector[Number(s[1])] == 'true')
       )
-      .map((_) => _.name);
+      .map((_) => gateNames[_.idx]);
   }
 
   const regions: RegionInfoEntity = Object.assign(
