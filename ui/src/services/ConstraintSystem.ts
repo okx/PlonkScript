@@ -232,6 +232,45 @@ export function convertLookupsToStringifyDictionary(
   return out;
 }
 
+export function getRelativeColumns(polys: PolynomialExpression): string[] {
+  if (Array.isArray(polys)) {
+    if (polys[0] == 'Constant') return [];
+    if (polys[0] == 'Negated') return getRelativeColumns(polys[1]);
+
+    if (polys[0] == 'Sum')
+      return getRelativeColumns(polys[1]).concat(getRelativeColumns(polys[2]));
+
+    if (polys[0] == 'Product')
+      return getRelativeColumns(polys[1]).concat(getRelativeColumns(polys[2]));
+
+    if (polys[0] == 'Scaled') return getRelativeColumns(polys[1]);
+    if (polys[0] == 'SelectorExpression')
+      // special type from tiny-ram-halo2
+      return getRelativeColumns(polys[1]);
+  }
+
+  return [`${polys.type[0].toLowerCase()}_${polys.column_index}`];
+}
+
+function getGateColumns(data: MockProverData): {
+  gates: Record<string, string[]>;
+} {
+  const gates: Record<string, string[]> = {};
+  for (let i = 0; i < data.cs.gates.length; i++) {
+    const gate = data.cs.gates[i];
+    const name =
+      Object.keys(gates).indexOf(gate.name) > -1
+        ? `${gate.name} - ${i}`
+        : gate.name;
+    gates[name] = gate.polys
+      .map((poly) => getRelativeColumns(poly as PolynomialExpression))
+      .flat()
+      .filter((value, index, self) => self.indexOf(value) === index);
+  }
+
+  return { gates };
+}
+
 interface ColumnDefinition {
   num: number;
   name: string;
@@ -311,6 +350,7 @@ export function getRowsAndRegions(
   const rmaphits: Record<string, number> = {};
   const { gates, gateNames } = convertGatesToStringifyDictionary(data);
   const lookups = convertLookupsToStringifyDictionary(data.cs.lookups);
+  const { gates: gateColumns } = getGateColumns(data);
   data.start = data.start || '0';
   data.end = data.end || data.n;
   const start = Number(data.start);
@@ -413,7 +453,7 @@ export function getRowsAndRegions(
   Object.keys(regions).forEach(function (key) {
     regions[key] = { color: rmapcolor[key], hits: rmaphits[key] };
   });
-  return { rows, gates, rmap, rmapcolor, regions, lookups };
+  return { rows, gates, rmap, rmapcolor, regions, lookups, gateColumns };
 }
 
 function prettifyCell(
