@@ -47,6 +47,15 @@ let d = format!("{:#?}", prover);
 let mut file = std::fs::File::create("data.rust").unwrap();
 std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
           >
+          or
+          <pre>
+halo2_summarizer = "0.1.0"
+
+let d = format!("{:#?}", prover);
+let d = halo2_summarizer::trim(&d, Some(0..1024));
+let mut file = std::fs::File::create("data.rust").unwrap();
+std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
+          >
 
           PS: this is client-only processing, no data is transfered to the
           server.

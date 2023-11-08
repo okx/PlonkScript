@@ -1,12 +1,6 @@
 #![allow(dead_code)]
 
-pub fn trim(mock_prover_output: &String) -> String {
-    trim_start(mock_prover_output, 0)
-}
-
-pub fn trim_start(mock_prover_output: &String, start: i32) -> String {
-    trim_start_end(mock_prover_output, start, start + 1024)
-}
+use std::ops::Range;
 
 enum ReadingStatus {
     Skipping,
@@ -18,7 +12,14 @@ const SPACE8: &str = "        ";
 const SPACE12: &str = "            ";
 const SPACE16: &str = "                ";
 
-pub fn trim_start_end(mock_prover_output: &String, start: i32, end: i32) -> String {
+pub fn trim(mock_prover_output: &String, range: Option<Range<i32>>) -> String {
+    match range {
+        None => trim_start_end(mock_prover_output, 0, 1024),
+        Some(range) => trim_start_end(mock_prover_output, range.start, range.end),
+    }
+}
+
+fn trim_start_end(mock_prover_output: &String, start: i32, end: i32) -> String {
     let mut status = ReadingStatus::Skipping;
     let mut inside_strs = Vec::<&str>::new();
     let mut s = "".to_string();
