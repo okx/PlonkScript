@@ -249,7 +249,13 @@ export function getRelativeColumns(polys: PolynomialExpression): string[] {
       return getRelativeColumns(polys[1]);
   }
 
-  return [`${polys.type[0].toLowerCase()}_${polys.column_index}`];
+  return [
+    getColumnName({
+      type: 'Column',
+      index: polys.column_index,
+      column_type: polys.type,
+    }),
+  ];
 }
 
 function getGateColumns(data: MockProverData): {
@@ -369,7 +375,7 @@ export function getRowsAndRegions(
     for (let i = 0; i < region.cells.length; i++) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cell = region.cells[i] as any;
-      const colname = `${cell[0].column_type.toLowerCase()}-${cell[0].index}`;
+      const colname = getColumnName(cell[0]);
       const rowidx = Number(cell[1]);
 
       rmap[rowidx][colname] = rname;
@@ -437,6 +443,13 @@ export function getRowsAndRegions(
     rows.push(obj);
   }
 
+  const selectorMaps = data.cs.selector_map
+    .map((s, i) => ({
+      col: getColumnName(s),
+      idx: i,
+    }))
+    .reduce((pv, cv) => ({ ...pv, [`selector-${cv.idx}`]: cv.col }), {});
+
   function getGatesDesc(selector: string[]) {
     return data.cs.gates
       .map((_, i) => ({ gate: _, idx: i }))
@@ -453,7 +466,16 @@ export function getRowsAndRegions(
   Object.keys(regions).forEach(function (key) {
     regions[key] = { color: rmapcolor[key], hits: rmaphits[key] };
   });
-  return { rows, gates, rmap, rmapcolor, regions, lookups, gateColumns };
+  return {
+    rows,
+    gates,
+    rmap,
+    rmapcolor,
+    regions,
+    lookups,
+    gateColumns,
+    selectorMaps,
+  };
 }
 
 function prettifyCell(
@@ -575,10 +597,8 @@ export function getPermutationLines(
       const row = Number(mrow[1]);
 
       // from pointed address(col, row) to current cell(c, r)
-      const tocolname = `${cols[c].column_type.toLowerCase()}-${cols[c].index}`;
-      const fromcolname = `${cols[col].column_type.toLowerCase()}-${
-        cols[col].index
-      }`;
+      const tocolname = getColumnName(cols[c]);
+      const fromcolname = getColumnName(cols[col]);
       if (fromcolname == tocolname && row == r) continue;
       const from = cellBadges[fromcolname][row];
       const to = cellBadges[tocolname][r];
@@ -593,4 +613,8 @@ export function getPermutationLines(
   }
 
   return lines;
+}
+
+function getColumnName(col: ColumnType): string {
+  return `${col.column_type.toLowerCase()}-${col.index}`;
 }
