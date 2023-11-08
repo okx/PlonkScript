@@ -340,6 +340,7 @@ function loadData(data?: MockProverData) {
       gates.value[key] = gates.value[key].map((g) => ({
         name: g.name,
         literal: hljs.highlight(g.literal, { language: 'gate' }).value,
+        idx: g.idx,
       }));
     });
 
