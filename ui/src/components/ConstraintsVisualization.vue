@@ -27,6 +27,9 @@
         dense
         :pagination="pagination"
         :hide-pagination="true"
+        row-key="name"
+        selection="multiple"
+        v-model:selected="selectedGates"
       >
         <template v-slot:body-cell-expressions="props">
           <q-td :props="props">
@@ -42,7 +45,9 @@
           </q-td>
         </template>
       </q-table>
-
+      {{ selectedGates }}
+      <hr />
+      {{ selectedColumns }}
       <q-table
         :rows="lookups"
         flat
@@ -63,7 +68,7 @@
     <div class="q-pa-md row">
       <q-table
         :rows="rows"
-        :columns="columns"
+        :columns="filteredColumns"
         row-key="name"
         flat
         bordered
@@ -133,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { Ref, ref, watch } from 'vue';
+import { Ref, computed, ref, watch } from 'vue';
 import { QTableColumn } from 'quasar';
 import LeaderLine from 'leader-line-new';
 import {
@@ -147,6 +152,7 @@ import {
   GateLiteralExpression,
   RegionInfoEntity,
   LookupLiteralExpression,
+  RowsAndRegionsResponse,
 } from 'src/services/ConstraintSystem';
 import { registerGateLanguage } from 'src/services/GateLanguage';
 import hljs from 'highlight.js';
@@ -213,6 +219,7 @@ function toggleConstraints() {
   }
 }
 
+const rrr: Ref<RowsAndRegionsResponse | undefined> = ref(undefined);
 const rows: Ref<Record<string, RowFieldWithPosition>[]> = ref([]);
 const rmap: Ref<Record<number, Record<string, string>>> = ref({});
 const rmapcolor: Ref<Record<string, string>> = ref({});
@@ -221,7 +228,31 @@ const regions: Ref<RegionInfoEntity> = ref({});
 const gates: Ref<Record<string, GateLiteralExpression[]>> = ref({});
 // QTable value don't accept array of field value
 const gatesArray: Ref<Array<{ name: string; expressions: string }>> = ref([]);
+const selectedGates: Ref<Array<{ name: string; expressions: string }>> = ref(
+  []
+);
+const selectedColumns = computed(() => {
+  const v = rrr.value;
+  if (!v) return [];
 
+  return Object.keys(v.gateColumns)
+    .map((_) => ({ key: _, list: v.gateColumns[_] }))
+    .filter((_) => selectedGates.value.some((g) => g.name == _.key))
+    .map((_) => _.list)
+    .flat()
+    .filter((value, index, self) => self.indexOf(value) === index);
+});
+const filteredColumns = computed(() => {
+  const rv = rrr.value;
+  if (!columns.value || !rv) return [];
+  return columns.value.filter(
+    (_) =>
+      _.name == 'index' ||
+      _.name == 'gates' ||
+      selectedColumns.value.includes(_.name) ||
+      selectedColumns.value.map((_) => rv.selectorMaps[_]).includes(_.name)
+  );
+});
 const lookups: Ref<Array<LookupLiteralExpression>> = ref([]);
 
 function getBorderOfRegion(
@@ -323,6 +354,7 @@ function loadData(data?: MockProverData) {
     columns.value = colsdata;
     const colorList = ['red', 'blue', 'wheat', 'green'];
     const rr = getRowsAndRegions(data, cols, colorList);
+    rrr.value = rr;
     rows.value = rr.rows;
     rmap.value = rr.rmap;
     rmapcolor.value = rr.rmapcolor;

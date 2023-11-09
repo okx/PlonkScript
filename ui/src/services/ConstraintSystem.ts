@@ -345,11 +345,22 @@ export function getColumns(cols: ColumnDefinition[]): QTableColumn[] {
   return columns;
 }
 
+export interface RowsAndRegionsResponse {
+  rows: Record<string, RowFieldWithPosition>[];
+  gates: Record<string, GateLiteralExpression[]>;
+  rmap: Record<number, Record<string, string>>;
+  rmapcolor: Record<string, string>;
+  regions: RegionInfoEntity;
+  lookups: LookupLiteralExpression[];
+  gateColumns: Record<string, string[]>;
+  selectorMaps: Record<string, string>;
+}
+
 export function getRowsAndRegions(
   data: MockProverData,
   cols: ColumnDefinition[],
   colorList = ['red', 'blue', 'wheat', 'green']
-) {
+): RowsAndRegionsResponse {
   const rows: Record<string, RowFieldWithPosition>[] = [];
   const rmap: Record<number, Record<string, string>> = {};
   const rmapcolor: Record<string, string> = {};
@@ -448,7 +459,7 @@ export function getRowsAndRegions(
       col: getColumnName(s),
       idx: i,
     }))
-    .reduce((pv, cv) => ({ ...pv, [`selector-${cv.idx}`]: cv.col }), {});
+    .reduce((pv, cv) => ({ ...pv, [cv.col]: `selector-${cv.idx}` }), {});
 
   function getGatesDesc(selector: string[]) {
     return data.cs.gates
