@@ -9,6 +9,7 @@
         @click="toggleConstraints()"
       />
 
+      <h6>Region Table</h6>
       <table>
         <tr v-for="({ color: c, hits }, k) in regions" :key="k">
           <td :style="`border: 1px solid ${c};`">
@@ -20,6 +21,7 @@
         </tr>
       </table>
 
+      <h6>Gate Table</h6>
       <q-table
         :rows="gatesArray"
         flat
@@ -45,9 +47,8 @@
           </q-td>
         </template>
       </q-table>
-      {{ selectedGates }}
-      <hr />
-      {{ selectedColumns }}
+
+      <h6>Lookup Table</h6>
       <q-table
         :rows="lookups"
         flat
@@ -64,6 +65,7 @@
           </q-td>
         </template>
       </q-table>
+      <q-checkbox v-model="showOtherColumns" label="Show Other Columns" />
     </div>
     <div class="q-pa-md row">
       <q-table
@@ -250,10 +252,13 @@ const filteredColumns = computed(() => {
       _.name == 'index' ||
       _.name == 'gates' ||
       selectedColumns.value.includes(_.name) ||
+      (showOtherColumns.value && otherColumns.value.includes(_.name)) ||
       selectedColumns.value.map((_) => rv.selectorMaps[_]).includes(_.name)
   );
 });
 const lookups: Ref<Array<LookupLiteralExpression>> = ref([]);
+const otherColumns: Ref<Array<string>> = ref([]);
+const showOtherColumns = ref(false);
 
 function getBorderOfRegion(
   row: RowFieldWithPosition,
@@ -347,6 +352,9 @@ function loadData(data?: MockProverData) {
   rows.value = [];
   columns.value = [];
   gatesArray.value = [];
+  selectedGates.value = [];
+  lookups.value = [];
+  showOtherColumns.value = false;
 
   setTimeout(() => {
     const cols = getColumnDefinition(data);
@@ -380,6 +388,25 @@ function loadData(data?: MockProverData) {
       name: _,
       expressions: _,
     }));
+    selectedGates.value = gatesArray.value;
+    showOtherColumns.value = true;
+    const gateColumnNames = Object.keys(rr.gateColumns)
+      .map((_) => ({ key: _, list: rr.gateColumns[_] }))
+      .filter((_) => gatesArray.value.some((g) => g.name == _.key))
+      .map((_) => _.list)
+      .flat()
+      .filter((value, index, self) => self.indexOf(value) === index);
+
+    otherColumns.value = columns.value
+      .filter(
+        (_) =>
+          _.name != 'index' &&
+          _.name != 'gates' &&
+          !_.name.startsWith('selector') &&
+          !gateColumnNames.includes(_.name)
+      )
+      .map((_) => _.name);
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       line.remove();
@@ -440,5 +467,10 @@ $pos: left, right, top, bottom;
   :deep(.hljs-next-rotation) {
     color: $indigo-14;
   }
+}
+
+h6 {
+  margin-block-end: 0.5rem;
+  border-bottom: 1px solid darkgrey;
 }
 </style>
