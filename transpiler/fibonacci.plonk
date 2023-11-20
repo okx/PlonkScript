@@ -1,4 +1,4 @@
-# k: 5
+# k: 4
 # in1: 1
 # in2: 1
 
@@ -42,13 +42,13 @@ add(a, b, c, s);
 let fr = first_row(a, b, c, s, in1, in2);
 let last_b = fr[0];
 let last_c = fr[1];
-for i in 0..N {
+for i in 1..N {
     let c = next_row(a, b, c, s, last_b, last_c);
     last_b = last_c;
     last_c = c;
 }
 
-out <== c[N-1];
+out <== last_c;
 
 
 

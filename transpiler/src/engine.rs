@@ -46,7 +46,7 @@ impl EngineExt for rhai::Engine {
 
 impl Column {
     fn get_field(&mut self, index: i64) -> Cell {
-        let name = format!("{}[{}]", self.name, index);
+        let name = self.get_field_name(index);
         if self.cells.contains_key(&name) {
             return self.cells[&name].clone();
         }
@@ -59,7 +59,7 @@ impl Column {
         }
     }
     fn set_field(&mut self, index: i64, value: Cell) {
-        let name = format!("{}[{}]", self.name, index);
+        let name = self.get_field_name(index);
         let cell = Cell {
             name: name.clone(),
             index,
@@ -68,6 +68,11 @@ impl Column {
         };
         let entry = self.cells.entry(name).or_insert(cell.clone()); //.and_modify(||cell);
         *entry = cell;
+    }
+
+    fn get_field_name(&self, index: i64) -> String {
+        let region = unsafe { CONTEXT.regions.last().unwrap().clone() };
+        format!("{}[{}]_{}_{}", self.name, index, region.name, region.id)
     }
 }
 
@@ -157,6 +162,7 @@ fn define_region(v: String) {
     unsafe {
         CONTEXT.regions.push(Region {
             name: v,
+            id: CONTEXT.regions.len() as i64,
             instructions: vec![],
         });
     }

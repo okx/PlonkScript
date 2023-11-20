@@ -74,6 +74,7 @@ pub struct SimplifiedConstraitSystem {
 #[allow(dead_code)]
 pub struct Region {
     pub name: String,
+    pub id: i64,
     pub instructions: Vec<Instruction>,
 }
 
