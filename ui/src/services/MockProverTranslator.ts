@@ -67,7 +67,7 @@ export function convertMockProverOutputToJson(content: string): string {
   content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
 
   // quote value to string
-  content = content.replace(/:\s*([^{([\n]+),$/gm, ': "$1",');
+  content = content.replace(/:\s*([^" {([\n]+),$/gm, ': "$1",');
 
   // remove trailing comma
   content = content.replace(/,(\s*[\}\]])/g, '$1');
@@ -76,7 +76,7 @@ export function convertMockProverOutputToJson(content: string): string {
   content = content.replace(/(0x[\da-f]+)/g, '"$1"');
 
   // quote array item
-  content = content.replace(/^(\s*)([^\n([{}\]):,]+)(,?)$/gm, '$1"$2"$3');
+  content = content.replace(/^(\s*)([^\n "([{}\]):,]+)(,?)$/gm, '$1"$2"$3');
 
   // quote prop key
   content = content.replace(/^(\s*)([\w\d]+):/gm, '$1"$2":');
