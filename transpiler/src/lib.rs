@@ -23,11 +23,7 @@ static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     instance_count: 0,
 };
 
-pub fn try_run(
-    code: String,
-    k: u32,
-    inputs: Vec<(String, String)>,
-) -> Result<String, Box<EvalAltResult>> {
+pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     unsafe {
         CONTEXT = SimplifiedConstraitSystem {
             // ..Default::default()
@@ -44,20 +40,21 @@ pub fn try_run(
 
     engine.register_plonk_script();
 
-    unsafe {
-        for (name, value) in inputs {
-            CONTEXT.inputs.insert(name, value);
-        }
-    }
-
     let script = transpile(code);
+    let mut file = std::fs::File::create("debug.rhai").unwrap();
+    std::io::Write::write_all(&mut file, script.as_bytes()).unwrap();
 
     // println!("{}", script);
     engine.run(script.as_str())?;
 
-    // let d = unsafe { format!("{:#?}", CONTEXT) };
-    // let mut file = std::fs::File::create("out.rust").unwrap();
-    // std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+    let d = unsafe { format!("{:#?}", CONTEXT) };
+    let mut file = std::fs::File::create("context.rust").unwrap();
+    std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+
+    let k = unsafe { CONTEXT.inputs.get("k").or(Some(&"8".to_string())) }
+        .unwrap()
+        .parse::<u32>()
+        .unwrap();
 
     let public_input = unsafe { CONTEXT.signals.clone() }
         .into_iter()

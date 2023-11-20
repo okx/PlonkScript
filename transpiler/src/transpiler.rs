@@ -1,7 +1,9 @@
 use regex::{Captures, Regex};
 
 pub fn transpile(code: String) -> String {
+    let code = format_parameters(code);
     let code = format_gate_fn(code);
+    let code = format_region_fn(code);
     let (code, outputs) = format_declaration(code);
     let code = format_assignment(code);
     let code = append_output_assignment(code, outputs);
@@ -122,6 +124,50 @@ fn format_assignment(code: String) -> String {
             ),
             ("<--", "enable") => format!("{}enable_selector({});", &x["indent"], &x["to"]),
             _ => todo!(),
+        })
+        .to_string()
+}
+
+fn format_region_fn(code: String) -> String {
+    let re_region_fn = Regex::new(
+        r"(?s)(?x)
+        region\s+(?P<name>[\w\d]+)
+        \((?P<parameters>
+        [\w\d,\s]*)\)
+        \s+\{
+        (?P<code>.*?)
+        \}",
+    )
+    .unwrap();
+    re_region_fn
+        .replace_all(&code, |x: &Captures| {
+            format!(
+                "fn {}({}) {{define_region(\"{}\");{}}}",
+                &x["name"],
+                &x["parameters"],
+                &x["name"],
+                format_gate_exp(x["code"].to_string(), x["name"].to_string())
+            )
+            .to_string()
+        })
+        .to_string()
+}
+
+fn format_parameters(code: String) -> String {
+    let re_parameters = Regex::new(
+        r"(?m)(?x)
+        ^\#
+        \s*
+        (?P<name>[\d\w]+)
+        :
+        \s*
+        (?P<val>.*)
+        $",
+    )
+    .unwrap();
+    re_parameters
+        .replace_all(&code, |x: &Captures| {
+            format!("set_parameter(\"{}\", {});", &x["name"], &x["val"]).to_string()
         })
         .to_string()
 }

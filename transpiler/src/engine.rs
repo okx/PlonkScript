@@ -36,6 +36,8 @@ impl EngineExt for rhai::Engine {
         .register_fn("+", operator_add_cell_column)
         .register_fn("-", operator_minus_cell_column)
         .register_fn("*", operator_mul_column_cell)
+        .register_fn("set_parameter", set_parameter)
+        .register_fn("set_parameter", set_parameter_i64)
         // .register_indexer_set(TestStruct::set_field)
         ;
         define_region("default".to_string());
@@ -323,5 +325,15 @@ fn convert_to_value(exp: CellExpression) -> Option<String> {
             .to_string(),
         ),
         CellExpression::Scaled(_, _) => todo!(),
+    }
+}
+
+fn set_parameter_i64(name: String, v: i64) {
+    set_parameter(name, v.to_string())
+}
+
+fn set_parameter(name: String, v: String) {
+    unsafe {
+        CONTEXT.inputs.insert(name, v);
     }
 }
