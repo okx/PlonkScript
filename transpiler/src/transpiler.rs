@@ -2,6 +2,7 @@ use regex::{Captures, Regex};
 
 pub fn transpile(code: String) -> String {
     let code = format_parameters(code);
+    let code = format_hex(code);
     let code = format_gate_fn(code);
     let code = format_region_fn(code);
     let (code, outputs) = format_declaration(code);
@@ -96,7 +97,14 @@ fn format_declaration(code: String) -> (String, Vec<String>) {
                 "let {} = init_selector_column(\"{}\");",
                 &x["name"], &x["name"]
             ),
-            (_, _) => todo!(),
+            ("public", "fixed") => format!(
+                "let {} = init_fixed_column(\"{}\");",
+                &x["name"], &x["name"]
+            ),
+            (modifier, t) => {
+                println!("{} {} is not supported", modifier, t);
+                todo!()
+            }
         })
         .to_string();
     (code, outputs)
@@ -123,7 +131,14 @@ fn format_assignment(code: String) -> String {
                 &x["indent"], &x["to"], &x["to"], &x["from"]
             ),
             ("<--", "enable") => format!("{}enable_selector({});", &x["indent"], &x["to"]),
-            _ => todo!(),
+            ("<--", _) => format!(
+                "{}{} = assign_common({}, {});",
+                &x["indent"], &x["to"], &x["to"], &x["from"]
+            ),
+            (ass, val) => {
+                println!("{} {} {} is not supported", &x["to"], ass, val);
+                todo!()
+            }
         })
         .to_string()
 }
@@ -168,6 +183,20 @@ fn format_parameters(code: String) -> String {
     re_parameters
         .replace_all(&code, |x: &Captures| {
             format!("set_parameter(\"{}\", {});", &x["name"], &x["val"]).to_string()
+        })
+        .to_string()
+}
+
+
+fn format_hex(code: String) -> String {
+    let re_hex = Regex::new(
+        r"(?x)
+        (?P<hex>0x[0-9a-f]{64})",
+    )
+    .unwrap();
+    re_hex
+        .replace_all(&code, |x: &Captures| {
+            format!("\"{}\"", &x["hex"]).to_string()
         })
         .to_string()
 }

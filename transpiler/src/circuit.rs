@@ -7,8 +7,8 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
-use crate::system::CellExpression;
 use crate::{engine::DEFAULT_INSTANCE_COLUMN_NAME, CONTEXT};
+use crate::{system::CellExpression, util::get_known_value};
 
 #[derive(Default, Debug)]
 pub struct MyCircuit<F: PrimeField> {
@@ -110,9 +110,18 @@ impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
                             crate::system::Instruction::EnableSelector(c) => config
                                 .get_selector(c.column.name)
                                 .enable(&mut region, c.index as usize)?,
+                            crate::system::Instruction::AssignFixed(f, exp) => {
+                                let acell = region.assign_fixed(
+                                    || "fixed",
+                                    config.get_fixed(f.column.name),
+                                    f.index as usize,
+                                    || config.convert_to_value(exp.clone()),
+                                )?;
+                                config.acells.push((f.name, acell));
+                            }
                             crate::system::Instruction::AssignAdvice(a, exp) => {
                                 let acell = region.assign_advice(
-                                    || "here",
+                                    || "advice",
                                     config.get_advice(a.column.name),
                                     a.index as usize,
                                     || config.convert_to_value(exp.clone()),
@@ -169,6 +178,16 @@ impl<F: PrimeField> CommonConfig<F> {
             .1
     }
 
+    fn get_fixed(&self, name: String) -> Column<Fixed> {
+        self.fixeds
+            .clone()
+            .into_iter()
+            .filter(|x| x.0 == name)
+            .nth(0)
+            .unwrap()
+            .1
+    }
+
     fn get_instance(&self, name: String) -> Column<Instance> {
         self.instances
             .clone()
@@ -213,14 +232,22 @@ impl<F: PrimeField> CommonConfig<F> {
                     _ => todo!(),
                 },
             ),
-            crate::system::ColumnType::Fixed => todo!(),
+            crate::system::ColumnType::Fixed => meta.query_fixed(
+                self.fixeds
+                    .clone()
+                    .into_iter()
+                    .filter(|x| x.0 == column.name)
+                    .nth(0)
+                    .unwrap()
+                    .1,
+            ),
             crate::system::ColumnType::Instance => todo!(),
         }
     }
 
     fn convert_to_value(&self, exp: CellExpression) -> Value<F> {
         match exp {
-            CellExpression::Constant(c) => Value::known(F::from(c as u64)),
+            CellExpression::Constant(c) => Value::known(get_known_value(c).unwrap()),
             CellExpression::CellValue(c) => match c.column.ctype {
                 crate::system::ColumnType::Selector => {
                     self.get_assigned_cell(c.name).value().copied()
@@ -228,13 +255,15 @@ impl<F: PrimeField> CommonConfig<F> {
                 crate::system::ColumnType::Advice => {
                     self.get_assigned_cell(c.name).value().copied()
                 }
-                crate::system::ColumnType::Fixed => todo!(),
+                crate::system::ColumnType::Fixed => self.get_assigned_cell(c.name).value().copied(),
                 crate::system::ColumnType::Instance => todo!(),
             },
             CellExpression::Negated(n) => self.convert_to_value(*n),
             CellExpression::Product(a, b) => self.convert_to_value(*a) * self.convert_to_value(*b),
             CellExpression::Sum(a, b) => self.convert_to_value(*a) + self.convert_to_value(*b),
-            CellExpression::Scaled(_, _) => todo!(),
+            CellExpression::Scaled(a, b) => {
+                self.convert_to_value(*a) * self.convert_to_value(CellExpression::Constant(b))
+            }
         }
     }
 }
@@ -245,11 +274,11 @@ fn convert_to_gate_expression<F: PrimeField>(
     exp: CellExpression,
 ) -> Expression<F> {
     match exp {
-        CellExpression::Constant(c) => Expression::Constant(F::from(c as u64)),
+        CellExpression::Constant(c) => Expression::Constant(get_known_value(c).unwrap()),
         CellExpression::CellValue(c) => match c.column.ctype {
             crate::system::ColumnType::Selector => config.query_column(meta, c),
             crate::system::ColumnType::Advice => config.query_column(meta, c),
-            crate::system::ColumnType::Fixed => todo!(),
+            crate::system::ColumnType::Fixed => config.query_column(meta, c),
             crate::system::ColumnType::Instance => todo!(),
         },
         CellExpression::Negated(n) => -convert_to_gate_expression(meta, config.clone(), *n),
@@ -261,6 +290,8 @@ fn convert_to_gate_expression<F: PrimeField>(
             convert_to_gate_expression(meta, config.clone(), *a)
                 + convert_to_gate_expression(meta, config.clone(), *b)
         }
-        CellExpression::Scaled(_, _) => todo!(),
+        CellExpression::Scaled(a, b) => {
+            convert_to_gate_expression(meta, config.clone(), *a) * get_known_value::<F>(b).unwrap()
+        }
     }
 }

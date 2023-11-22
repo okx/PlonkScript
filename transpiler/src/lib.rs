@@ -12,6 +12,7 @@ mod circuit;
 mod engine;
 mod system;
 mod transpiler;
+mod util;
 
 static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     // ..Default::default()
@@ -45,7 +46,10 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     std::io::Write::write_all(&mut file, script.as_bytes()).unwrap();
 
     // println!("{}", script);
-    engine.run(script.as_str())?;
+    if let Err(error) = engine.run(script.as_str()) {
+        println!("Script Error: {:#?}", error);
+        return Err(error);
+    }
 
     let d = unsafe { format!("{:#?}", CONTEXT) };
     let mut file = std::fs::File::create("context.rust").unwrap();
@@ -58,7 +62,10 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
 
     let public_input = unsafe { CONTEXT.signals.clone() }
         .into_iter()
-        .map(|x| halo2_proofs::pasta::Fp::from(x.value.unwrap().parse::<u64>().unwrap()))
+        .map(|x| match x.value {
+            Some(x) => halo2_proofs::pasta::Fp::from(x.parse::<u64>().unwrap()),
+            None => panic!("No value for signal [{}]", x.name),
+        })
         .collect();
 
     let ret = run_prover(k, public_input);
@@ -74,6 +81,10 @@ fn run_prover(k: u32, public_input: Vec<halo2_proofs::pasta::Fp>) -> String {
     let presult = halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]);
 
     if let Ok(prover) = presult {
+        let d = format!("{:#?}", prover);
+        let mut file = std::fs::File::create("visualization.rust").unwrap();
+        std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+
         prover.assert_satisfied();
         format!("{:#?}", prover)
     } else {
