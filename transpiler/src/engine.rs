@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use rhai::EvalAltResult;
 
 use crate::util::convert_to_value;
@@ -55,8 +53,10 @@ impl EngineExt for rhai::Engine {
 impl Column {
     pub fn get_field(&mut self, index: i64) -> Cell {
         let name = self.get_field_name(index);
-        if self.cells.contains_key(&name) {
-            return self.cells[&name].clone();
+        unsafe {
+            if CONTEXT.cells.contains_key(&name) {
+                return CONTEXT.cells[&name].clone();
+            }
         }
 
         Cell {
@@ -74,8 +74,10 @@ impl Column {
             value: value.value,
             ..value
         };
-        let entry = self.cells.entry(name).or_insert(cell.clone()); //.and_modify(||cell);
-        *entry = cell;
+        unsafe {
+            let entry = CONTEXT.cells.entry(name).or_insert(cell.clone()); //.and_modify(||cell);
+            *entry = cell;
+        }
     }
 
     fn get_field_name(&self, index: i64) -> String {
@@ -106,7 +108,6 @@ fn init_input(v: &str) -> Cell {
             name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Input,
-            cells: HashMap::new(),
         },
     };
     unsafe {
@@ -124,7 +125,6 @@ fn init_output(v: String) -> Cell {
             name: DEFAULT_INSTANCE_COLUMN_NAME.to_string(),
             ctype: ColumnType::Instance,
             stype: SpecialType::Output,
-            cells: HashMap::new(),
         },
     };
     unsafe {
@@ -145,7 +145,6 @@ fn init_advice_column(v: String) -> Column {
         name: v.to_string(),
         ctype: ColumnType::Advice,
         stype: SpecialType::None,
-        cells: HashMap::new(),
     };
     unsafe {
         CONTEXT.columns.push(col.clone());
@@ -158,7 +157,6 @@ fn init_selector_column(v: String) -> Column {
         name: v.to_string(),
         ctype: ColumnType::Selector,
         stype: SpecialType::None,
-        cells: HashMap::new(),
     };
     unsafe {
         CONTEXT.columns.push(col.clone());
@@ -171,7 +169,6 @@ fn init_fixed_column(v: String) -> Column {
         name: v.to_string(),
         ctype: ColumnType::Fixed,
         stype: SpecialType::None,
-        cells: HashMap::new(),
     };
     unsafe {
         CONTEXT.columns.push(col.clone());
@@ -189,22 +186,16 @@ fn define_region(v: String) {
     }
     ()
 }
-// fn assign_constraint(a: Column, b: Column) {
-//     println!("assign_constraint({:?}, {:?})", a, b);
-//     ()
-// }
 
 // a <== b
 fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
-    println!("assign_constraint({:?}, {:?})", a, b);
+    // println!("assign_constraint({:?}, {:?})", a, b);
     a.value = b.value.clone();
     push_instruction_to_last_region(match (a.column.ctype, b.column.ctype) {
         (ColumnType::Advice, ColumnType::Instance) => {
-            // println!("a <== i {:#?}, {:#?}", a, b);
             vec![Instruction::AssignAdviceFromInstance(a.clone(), b.clone())]
         }
         (ColumnType::Instance, ColumnType::Advice) => {
-            println!("i <== a {:#?}, {:#?}", a, b);
             vec![Instruction::AssignAdviceFromInstance(b.clone(), a.clone())]
         }
         (_, _) => {

@@ -22,6 +22,7 @@ static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     regions: Vec::new(),
     gates: Vec::new(),
     inputs: Lazy::new(|| HashMap::new()),
+    cells: Lazy::new(|| HashMap::new()),
     instance_count: 0,
 };
 
@@ -34,6 +35,7 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
             regions: Vec::new(),
             gates: Vec::new(),
             inputs: Lazy::new(|| HashMap::new()),
+            cells: Lazy::new(|| HashMap::new()),
             instance_count: 0,
         };
     }

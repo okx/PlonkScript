@@ -25,7 +25,6 @@ pub struct Column {
     pub name: String,
     pub ctype: ColumnType,
     pub stype: SpecialType,
-    pub cells: HashMap<String, Cell>,
 }
 
 // Debug
@@ -68,6 +67,7 @@ pub struct SimplifiedConstraitSystem {
     pub instance_count: i64,
     pub gates: Vec<(String, CellExpression)>,
     pub inputs: Lazy<HashMap<String, String>>,
+    pub cells: Lazy<HashMap<String, Cell>>,
 }
 
 #[derive(Debug, Clone, Default)]
