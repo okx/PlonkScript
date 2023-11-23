@@ -1,5 +1,3 @@
-mod util;
-
 use std::fs;
 
 use rhai::EvalAltResult;

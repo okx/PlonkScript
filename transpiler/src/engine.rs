@@ -1,9 +1,8 @@
 use std::collections::HashMap;
 
-use halo2_proofs::pasta::Fp;
 use rhai::EvalAltResult;
 
-use crate::util::{fp_to_string, get_known_value};
+use crate::util::convert_to_value;
 use crate::{system::*, CONTEXT};
 
 pub const DEFAULT_INSTANCE_COLUMN_NAME: &str = "defins";
@@ -42,22 +41,13 @@ impl EngineExt for rhai::Engine {
         .register_fn("set_gate", set_gate)
         .register_fn("set_gate", set_gate_col_ce)
         .register_fn("enable_selector", enable_selector)
-        // .register_fn("+", operator_add)
-        // .register_fn("+", operator_add_column)
-        // .register_fn("+", operator_add_cell_column)
-        // .register_fn("+", operator_add_ce_ce)
-        // .register_fn("+", operator_add_ce_cell)
-        // .register_fn("-", operator_minus_ce_column)
-        // .register_fn("-", operator_minus_ce_cell)
-        // .register_fn("*", operator_mul_column_cell)
-        // .register_fn("*", operator_mul_cell_cell)
-        // .register_fn("*", operator_mul_cell_string)
-        // .register_fn("*", operator_mul_string_cell)
         .register_fn("set_parameter", set_parameter)
         .register_fn("set_parameter", set_parameter_i64)
+        .register_fn("inspect", inspect)
         // .register_indexer_set(TestStruct::set_field)
         ;
         register_operator(self);
+
         define_region("default".to_string());
     }
 }
@@ -206,19 +196,23 @@ fn define_region(v: String) {
 
 // a <== b
 fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
-    // println!("assign_constraint({:?}, {:?})", a, b);
+    println!("assign_constraint({:?}, {:?})", a, b);
     a.value = b.value.clone();
     push_instruction_to_last_region(match (a.column.ctype, b.column.ctype) {
         (ColumnType::Advice, ColumnType::Instance) => {
-            vec![Instruction::AssignAdviceFromInstance(a.clone(), b)]
+            // println!("a <== i {:#?}, {:#?}", a, b);
+            vec![Instruction::AssignAdviceFromInstance(a.clone(), b.clone())]
         }
         (ColumnType::Instance, ColumnType::Advice) => {
-            vec![Instruction::AssignAdviceFromInstance(b, a.clone())]
+            println!("i <== a {:#?}, {:#?}", a, b);
+            vec![Instruction::AssignAdviceFromInstance(b.clone(), a.clone())]
         }
-        (_, _) => vec![
-            Instruction::AssignAdvice(a.clone(), CellExpression::CellValue(b.clone())),
-            Instruction::ConstrainEqual(a.clone(), b),
-        ],
+        (_, _) => {
+            vec![
+                Instruction::AssignAdvice(a.clone(), CellExpression::CellValue(b.clone())),
+                Instruction::ConstrainEqual(a.clone(), b.clone()),
+            ]
+        }
     });
     a.clone()
 }
@@ -244,6 +238,12 @@ fn assign_common_string(a: &mut Cell, b: String) -> Cell {
             a.value = convert_to_value(cb.clone());
             push_instruction_to_last_region(vec![Instruction::AssignFixed(a.clone(), cb)]);
             a.clone()
+        }
+        ColumnType::Instance => {
+            let cb = CellExpression::Constant(b);
+            a.value = convert_to_value(cb.clone());
+            a.clone()
+            //warning
         }
         o => todo!("{:?}", o),
     }
@@ -340,63 +340,50 @@ fn set_gate(name: String, selector: CellExpression, exp: CellExpression) {
 
 // operators
 // Cell/CellExpression/Column/String/i64
-// plus/minus/mul
-
-// fn operator_plus(a: Dynamic ,b: Dynamic) -> CellExpression {
-//     println!("plus: {}, {}, {}, {}", a.clone().type_name(), b.clone().type_name(), a.type_id(), b.type_id());
-//     let (a,b)=match (a.type_name(), b.type_name()) {
-// ("Cell", "Cell")=>((a as Cell).to_cell_expression(), (b as Cell).to_cell_expression())
-//     };
-//     CellExpression::Sum(
-//         Box::new(a.to_cell_expression()),
-//         Box::new(b.to_cell_expression()),
-//     )
-// }
-
-macro_rules! engine_register {
+macro_rules! engine_register_ops {
     ($eng: expr, $op: tt, $func: ident, $a:ty, $b:ty) => {
         $eng.register_fn(stringify!($op), $func::<$a, $b>);
     };
 }
 
-macro_rules! engine_register_types {
+macro_rules! engine_register_ops_types {
     ($eng: expr, $op: tt, $func: ident) => {
-        engine_register!($eng, $op, $func, Cell, Cell);
-        engine_register!($eng, $op, $func, Cell, CellExpression);
-        engine_register!($eng, $op, $func, Cell, String);
-        engine_register!($eng, $op, $func, Cell, Column);
-        engine_register!($eng, $op, $func, Cell, i64);
+        engine_register_ops!($eng, $op, $func, Cell, Cell);
+        engine_register_ops!($eng, $op, $func, Cell, CellExpression);
+        engine_register_ops!($eng, $op, $func, Cell, String);
+        engine_register_ops!($eng, $op, $func, Cell, Column);
+        engine_register_ops!($eng, $op, $func, Cell, i64);
 
-        engine_register!($eng, $op, $func, CellExpression, Cell);
-        engine_register!($eng, $op, $func, CellExpression, CellExpression);
-        engine_register!($eng, $op, $func, CellExpression, String);
-        engine_register!($eng, $op, $func, CellExpression, Column);
-        engine_register!($eng, $op, $func, CellExpression, i64);
+        engine_register_ops!($eng, $op, $func, CellExpression, Cell);
+        engine_register_ops!($eng, $op, $func, CellExpression, CellExpression);
+        engine_register_ops!($eng, $op, $func, CellExpression, String);
+        engine_register_ops!($eng, $op, $func, CellExpression, Column);
+        engine_register_ops!($eng, $op, $func, CellExpression, i64);
 
-        engine_register!($eng, $op, $func, String, Cell);
-        engine_register!($eng, $op, $func, String, CellExpression);
-        engine_register!($eng, $op, $func, String, String);
-        engine_register!($eng, $op, $func, String, Column);
-        engine_register!($eng, $op, $func, String, i64);
+        engine_register_ops!($eng, $op, $func, String, Cell);
+        engine_register_ops!($eng, $op, $func, String, CellExpression);
+        engine_register_ops!($eng, $op, $func, String, String);
+        engine_register_ops!($eng, $op, $func, String, Column);
+        engine_register_ops!($eng, $op, $func, String, i64);
 
-        engine_register!($eng, $op, $func, Column, Cell);
-        engine_register!($eng, $op, $func, Column, CellExpression);
-        engine_register!($eng, $op, $func, Column, String);
-        engine_register!($eng, $op, $func, Column, Column);
-        engine_register!($eng, $op, $func, Column, i64);
+        engine_register_ops!($eng, $op, $func, Column, Cell);
+        engine_register_ops!($eng, $op, $func, Column, CellExpression);
+        engine_register_ops!($eng, $op, $func, Column, String);
+        engine_register_ops!($eng, $op, $func, Column, Column);
+        engine_register_ops!($eng, $op, $func, Column, i64);
 
-        engine_register!($eng, $op, $func, i64, Cell);
-        engine_register!($eng, $op, $func, i64, CellExpression);
-        engine_register!($eng, $op, $func, i64, String);
-        engine_register!($eng, $op, $func, i64, Column);
-        engine_register!($eng, $op, $func, i64, i64);
+        engine_register_ops!($eng, $op, $func, i64, Cell);
+        engine_register_ops!($eng, $op, $func, i64, CellExpression);
+        engine_register_ops!($eng, $op, $func, i64, String);
+        engine_register_ops!($eng, $op, $func, i64, Column);
+        engine_register_ops!($eng, $op, $func, i64, i64);
     };
 }
 
 fn register_operator(engine: &mut rhai::Engine) {
-    engine_register_types!(engine, +, operator_plus);
-    engine_register_types!(engine, -, operator_minus);
-    engine_register_types!(engine, *, operator_mul);
+    engine_register_ops_types!(engine, +, operator_plus);
+    engine_register_ops_types!(engine, -, operator_minus);
+    engine_register_ops_types!(engine, *, operator_mul);
 }
 
 fn operator_plus<T1: ToCellExpression, T2: ToCellExpression>(a: T1, b: T2) -> CellExpression {
@@ -421,129 +408,6 @@ fn operator_mul<T1: ToCellExpression, T2: ToCellExpression>(a: T1, b: T2) -> Cel
     }
 }
 
-// fn operator_add(a: Cell, b: Cell) -> CellExpression {
-//     CellExpression::Sum(
-//         Box::new(a.to_cell_expression()),
-//         Box::new(b.to_cell_expression()),
-//     )
-// }
-// fn operator_add_column(a: Column, b: Column) -> CellExpression {
-//     CellExpression::Sum(
-//         Box::new(CellExpression::CellValue(a.clone().get_field(0))),
-//         Box::new(CellExpression::CellValue(b.clone().get_field(0))),
-//     )
-// }
-// fn operator_add_cell_column(a: CellExpression, b: Column) -> CellExpression {
-//     // println!("operator: {:?} + {:?}", a, b);
-//     CellExpression::Sum(
-//         Box::new(a),
-//         Box::new(CellExpression::CellValue(b.clone().get_field(0))),
-//     )
-// }
-// fn operator_add_ce_ce(a: CellExpression, b: CellExpression) -> CellExpression {
-//     CellExpression::Sum(Box::new(a), Box::new(b))
-// }
-// fn operator_add_ce_cell(a: CellExpression, b: Cell) -> CellExpression {
-//     CellExpression::Sum(Box::new(a), Box::new(CellExpression::CellValue(b)))
-// }
-// fn operator_minus_ce_column(a: CellExpression, b: Column) -> CellExpression {
-//     // println!("operator: {:?} - {:?}", a, b);
-//     CellExpression::Sum(
-//         Box::new(a),
-//         Box::new(CellExpression::Negated(Box::new(
-//             CellExpression::CellValue(b.clone().get_field(0)),
-//         ))),
-//     )
-// }
-// fn operator_minus_ce_cell(a: CellExpression, b: Cell) -> CellExpression {
-//     CellExpression::Sum(
-//         Box::new(a),
-//         Box::new(CellExpression::Negated(Box::new(
-//             CellExpression::CellValue(b),
-//         ))),
-//     )
-// }
-// fn operator_mul_column_cell(a: Column, b: CellExpression) -> CellExpression {
-//     // println!("operator: {:?} * {:?}", a, b);
-//     CellExpression::Product(
-//         Box::new(CellExpression::CellValue(a.clone().get_field(0))),
-//         Box::new(b),
-//     )
-// }
-
-// fn operator_mul_cell_cell(a: CellExpression, b: CellExpression) -> CellExpression {
-//     CellExpression::Product(Box::new(a), Box::new(b))
-// }
-
-// fn operator_mul_cell_string(a: CellExpression, b: String) -> CellExpression {
-//     CellExpression::Product(Box::new(a), Box::new(b.to_cell_expression()))
-// }
-
-// fn operator_mul_string_cell(a: String, b: CellExpression) -> CellExpression {
-//     CellExpression::Product(Box::new(CellExpression::Constant(a)), Box::new(b))
-// }
-
-fn convert_to_value(exp: CellExpression) -> Option<String> {
-    match exp {
-        CellExpression::Constant(c) => Some(c),
-        CellExpression::CellValue(c) => match c.column.ctype {
-            crate::system::ColumnType::Selector => todo!(),
-            crate::system::ColumnType::Advice => c.value,
-            crate::system::ColumnType::Fixed => c.value,
-            crate::system::ColumnType::Instance => todo!(),
-        },
-        CellExpression::Negated(n) => convert_to_value(*n),
-        CellExpression::Product(a, b) =>
-        // (convert_to_value(*a).unwrap().parse::<i64>().unwrap()
-        //     * convert_to_value(*b).unwrap().parse::<i64>().unwrap())
-        // .to_string(),
-        {
-            match (
-                get_known_value::<Fp>(convert_to_value(*a)?),
-                get_known_value::<Fp>(convert_to_value(*b)?),
-            ) {
-                (None, _) => None,
-                (_, None) => None,
-                (Some(a), Some(b)) => Some(fp_to_string(&(a * b))),
-            }
-        }
-        // fp_to_string(
-        //     &(get_known_value::<Fp>(convert_to_value(*a).unwrap())
-        //         * get_known_value::<Fp>(convert_to_value(*b).unwrap())),
-        // ),
-        ,
-        CellExpression::Sum(a, b) => {
-            match (
-                get_known_value::<Fp>(convert_to_value(*a)?),
-                get_known_value::<Fp>(convert_to_value(*b)?),
-            ) {
-                (None, _) => None,
-                (_, None) => None,
-                (Some(a), Some(b)) => Some(fp_to_string(&(a + b))),
-            }
-        }
-        //  Some(
-        //     fp_to_string(
-        //         &(get_known_value::<Fp>(convert_to_value(*a).unwrap())
-        //             + get_known_value::<Fp>(convert_to_value(*b).unwrap())),
-        //     ),
-        //     // (convert_to_value(*a).unwrap().parse::<PrimeField>().unwrap()
-        //        //     + convert_to_value(*b).unwrap().parse::<PrimeField>().unwrap())
-        //        // .to_string(),
-        // ),
-        CellExpression::Scaled(a, b) => {
-            match (
-                get_known_value::<Fp>(convert_to_value(*a)?),
-                get_known_value::<Fp>(convert_to_value(CellExpression::Constant(b))?),
-            ) {
-                (None, _) => None,
-                (_, None) => None,
-                (Some(a), Some(b)) => Some(fp_to_string(&(a * b))),
-            }
-        }
-    }
-}
-
 fn set_parameter_i64(name: String, v: i64) {
     set_parameter(name, v.to_string())
 }
@@ -554,12 +418,6 @@ fn set_parameter(name: String, v: String) {
     }
 }
 
-// impl std::str::FromStr for PrimeField {
-//     type Err = std::num::ParseIntError;
-
-//     fn from_str(s: &str) -> Result<Self, Self::Err> {
-//         let val = get_known_value(&s);
-
-//         Ok(val)
-//     }
-// }
+fn inspect(obj: Cell) {
+    println!("{:#?}", obj);
+}

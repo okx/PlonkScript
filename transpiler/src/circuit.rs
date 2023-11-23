@@ -258,7 +258,7 @@ impl<F: PrimeField> CommonConfig<F> {
                 crate::system::ColumnType::Fixed => self.get_assigned_cell(c.name).value().copied(),
                 crate::system::ColumnType::Instance => todo!(),
             },
-            CellExpression::Negated(n) => self.convert_to_value(*n),
+            CellExpression::Negated(n) => -self.convert_to_value(*n),
             CellExpression::Product(a, b) => self.convert_to_value(*a) * self.convert_to_value(*b),
             CellExpression::Sum(a, b) => self.convert_to_value(*a) + self.convert_to_value(*b),
             CellExpression::Scaled(a, b) => {
