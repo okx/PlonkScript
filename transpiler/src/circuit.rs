@@ -159,43 +159,32 @@ impl<F: PrimeField> Circuit<F> for MyCircuit<F> {
 
 impl<F: PrimeField> CommonConfig<F> {
     fn get_selector(&self, name: String) -> Selector {
-        self.selectors
-            .clone()
-            .into_iter()
-            .filter(|x| x.0 == name)
-            .nth(0)
-            .unwrap()
-            .1
+        Self::get_column(&self.selectors, name)
     }
 
     fn get_advice(&self, name: String) -> Column<Advice> {
-        self.advices
-            .clone()
-            .into_iter()
-            .filter(|x| x.0 == name)
-            .nth(0)
-            .unwrap()
-            .1
+        Self::get_column(&self.advices, name)
     }
 
     fn get_fixed(&self, name: String) -> Column<Fixed> {
-        self.fixeds
-            .clone()
-            .into_iter()
-            .filter(|x| x.0 == name)
-            .nth(0)
-            .unwrap()
-            .1
+        Self::get_column(&self.fixeds, name)
     }
 
     fn get_instance(&self, name: String) -> Column<Instance> {
-        self.instances
-            .clone()
-            .into_iter()
+        Self::get_column(&self.instances, name)
+    }
+
+    fn get_column<T>(columns: &Vec<(String, T)>, name: String) -> T
+    where
+        T: Clone,
+    {
+        columns
+            .iter()
             .filter(|x| x.0 == name)
             .nth(0)
             .unwrap()
             .1
+            .clone()
     }
 
     fn get_assigned_cell(&self, name: String) -> AssignedCell<F, F> {
@@ -208,23 +197,11 @@ impl<F: PrimeField> CommonConfig<F> {
     fn query_column(&self, meta: &mut VirtualCells<F>, cell: crate::system::Cell) -> Expression<F> {
         let column = cell.column;
         match column.ctype {
-            crate::system::ColumnType::Selector => meta.query_selector(
-                self.selectors
-                    .clone()
-                    .into_iter()
-                    .filter(|x| x.0 == column.name)
-                    .nth(0)
-                    .unwrap()
-                    .1,
-            ),
+            crate::system::ColumnType::Selector => {
+                meta.query_selector(self.get_selector(column.name))
+            }
             crate::system::ColumnType::Advice => meta.query_advice(
-                self.advices
-                    .clone()
-                    .into_iter()
-                    .filter(|x| x.0 == column.name)
-                    .nth(0)
-                    .unwrap()
-                    .1,
+                self.get_advice(column.name),
                 match cell.index {
                     -1 => Rotation::prev(),
                     0 => Rotation::cur(),
@@ -232,15 +209,7 @@ impl<F: PrimeField> CommonConfig<F> {
                     _ => todo!(),
                 },
             ),
-            crate::system::ColumnType::Fixed => meta.query_fixed(
-                self.fixeds
-                    .clone()
-                    .into_iter()
-                    .filter(|x| x.0 == column.name)
-                    .nth(0)
-                    .unwrap()
-                    .1,
-            ),
+            crate::system::ColumnType::Fixed => meta.query_fixed(self.get_fixed(column.name)),
             crate::system::ColumnType::Instance => todo!(),
         }
     }
