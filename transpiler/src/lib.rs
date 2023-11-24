@@ -2,9 +2,8 @@ use std::collections::HashMap;
 
 use circuit::MyCircuit;
 use rhai::{Engine, EvalAltResult};
-use system::SimplifiedConstraitSystem;
+use system::{SimplifiedConstraitSystem, cell_expression::ToField};
 use transpiler::transpile;
-use util::get_known_value;
 
 use crate::engine::EngineExt;
 use once_cell::sync::Lazy;
@@ -13,7 +12,6 @@ pub mod circuit;
 pub mod engine;
 pub mod system;
 pub mod transpiler;
-pub mod util;
 
 static mut CONTEXT: SimplifiedConstraitSystem = SimplifiedConstraitSystem {
     // ..Default::default()
@@ -66,7 +64,7 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     let public_input = unsafe { CONTEXT.signals.clone() }
         .into_iter()
         .map(|x| match x.value {
-            Some(x) => get_known_value(x.clone()).expect(format!("Decoding failed: {x}").as_str()),
+            Some(x) => x.to_field().expect(format!("Decoding failed: {x}").as_str()),
             None => panic!("No value for signal [{}]", x.name),
         })
         .collect();

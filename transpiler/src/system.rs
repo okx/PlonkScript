@@ -1,6 +1,9 @@
 use once_cell::sync::Lazy;
 use std::{collections::HashMap, fmt};
 
+pub mod cell_expression;
+pub use cell_expression::ToCellExpression;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ColumnType {
@@ -89,38 +92,4 @@ pub enum Instruction {
     AssignAdviceFromInstance(Cell, Cell), // advice, adv_row(offset), instance, ins_row
     ConstrainEqual(Cell, Cell),        // advice, adv_row(offset), advice, adv_row(offset)
     ConstrainConstant(),               //
-}
-
-pub trait ToCellExpression {
-    fn to_cell_expression(self) -> CellExpression;
-}
-
-impl ToCellExpression for Cell {
-    fn to_cell_expression(self) -> CellExpression {
-        CellExpression::CellValue(self)
-    }
-}
-
-impl ToCellExpression for String {
-    fn to_cell_expression(self) -> CellExpression {
-        CellExpression::Constant(self)
-    }
-}
-
-impl ToCellExpression for i64 {
-    fn to_cell_expression(self) -> CellExpression {
-        CellExpression::Constant(self.to_string())
-    }
-}
-
-impl ToCellExpression for CellExpression {
-    fn to_cell_expression(self) -> CellExpression {
-        self
-    }
-}
-
-impl ToCellExpression for Column {
-    fn to_cell_expression(self) -> CellExpression {
-        CellExpression::CellValue(self.clone().get_field(0))
-    }
 }

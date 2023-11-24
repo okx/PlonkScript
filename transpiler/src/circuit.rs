@@ -7,8 +7,8 @@ use halo2_proofs::{
     poly::Rotation,
 };
 
+use crate::system::{cell_expression::ToField, CellExpression};
 use crate::{engine::DEFAULT_INSTANCE_COLUMN_NAME, CONTEXT};
-use crate::{system::CellExpression, util::get_known_value};
 
 #[derive(Default, Debug)]
 pub struct MyCircuit<F: PrimeField> {
@@ -247,7 +247,7 @@ impl<F: PrimeField> CommonConfig<F> {
 
     fn convert_to_value(&self, exp: CellExpression) -> Value<F> {
         match exp {
-            CellExpression::Constant(c) => Value::known(get_known_value(c).unwrap()),
+            CellExpression::Constant(c) => Value::known(c.to_field().unwrap()),
             CellExpression::CellValue(c) => match c.column.ctype {
                 crate::system::ColumnType::Selector => {
                     self.get_assigned_cell(c.name).value().copied()
@@ -274,7 +274,7 @@ fn convert_to_gate_expression<F: PrimeField>(
     exp: CellExpression,
 ) -> Expression<F> {
     match exp {
-        CellExpression::Constant(c) => Expression::Constant(get_known_value(c).unwrap()),
+        CellExpression::Constant(c) => Expression::Constant(c.to_field().unwrap()),
         CellExpression::CellValue(c) => match c.column.ctype {
             crate::system::ColumnType::Selector => config.query_column(meta, c),
             crate::system::ColumnType::Advice => config.query_column(meta, c),
@@ -291,7 +291,7 @@ fn convert_to_gate_expression<F: PrimeField>(
                 + convert_to_gate_expression(meta, config.clone(), *b)
         }
         CellExpression::Scaled(a, b) => {
-            convert_to_gate_expression(meta, config.clone(), *a) * get_known_value::<F>(b).unwrap()
+            convert_to_gate_expression(meta, config.clone(), *a) * b.to_field::<F>().unwrap()
         }
     }
 }

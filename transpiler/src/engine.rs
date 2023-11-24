@@ -1,7 +1,9 @@
 use rhai::EvalAltResult;
 
-use crate::util::convert_to_value;
-use crate::{system::*, CONTEXT};
+use crate::{
+    system::{cell_expression::ToValueString, *},
+    CONTEXT,
+};
 
 pub const DEFAULT_INSTANCE_COLUMN_NAME: &str = "defins";
 
@@ -211,14 +213,14 @@ fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
 // a <== b (b is expresion, e.g. b1 + b2)
 fn assign_constraint_cell_ce(a: &mut Cell, b: CellExpression) -> Cell {
     // println!("assign_constraint({:?}, {:?})", a, b);
-    a.value = convert_to_value(b.clone());
+    a.value = b.to_value_string();
     push_instruction_to_last_region(vec![Instruction::AssignAdvice(a.clone(), b)]);
     a.clone()
 }
 fn assign_constraint_string(a: &mut Cell, b: String) -> Cell {
     // println!("assign_constraint({:?}, {:?})", a, b);
     let cb = CellExpression::Constant(b);
-    a.value = convert_to_value(cb.clone());
+    a.value = cb.to_value_string();
     push_instruction_to_last_region(vec![Instruction::AssignAdvice(a.clone(), cb)]);
     a.clone()
 }
@@ -226,13 +228,13 @@ fn assign_common_string(a: &mut Cell, b: String) -> Cell {
     match a.column.ctype {
         ColumnType::Fixed => {
             let cb = CellExpression::Constant(b);
-            a.value = convert_to_value(cb.clone());
+            a.value = cb.to_value_string();
             push_instruction_to_last_region(vec![Instruction::AssignFixed(a.clone(), cb)]);
             a.clone()
         }
         ColumnType::Instance => {
             let cb = CellExpression::Constant(b);
-            a.value = convert_to_value(cb.clone());
+            a.value = cb.to_value_string();
             a.clone()
             //warning
         }
@@ -243,12 +245,12 @@ fn assign_common_string(a: &mut Cell, b: String) -> Cell {
 fn assign_common_ce(a: &mut Cell, b: CellExpression) -> Result<Cell, Box<EvalAltResult>> {
     match a.column.ctype {
         ColumnType::Fixed => {
-            a.value = convert_to_value(b.clone());
+            a.value = b.to_value_string();
             push_instruction_to_last_region(vec![Instruction::AssignFixed(a.clone(), b)]);
             Ok(a.clone())
         }
         ColumnType::Advice => {
-            a.value = convert_to_value(b.clone());
+            a.value = b.to_value_string();
             push_instruction_to_last_region(vec![Instruction::AssignAdvice(a.clone(), b)]);
             Ok(a.clone())
         }
