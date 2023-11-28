@@ -17,7 +17,7 @@ pub fn register_bind(engine: &mut rhai::Engine) {
 
 // a <== b
 fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
-    // println!("assign_constraint({:?}, {:?})", a, b);
+    // println!("assign_constraint({:#?}, {:#?})", a, b);
     a.value = b.value.clone();
     push_instruction_to_last_region(match (a.column.ctype, b.column.ctype) {
         (ColumnType::Advice, ColumnType::Instance) => {
@@ -26,12 +26,13 @@ fn assign_constraint(a: &mut Cell, b: Cell) -> Cell {
         (ColumnType::Instance, ColumnType::Advice) => {
             vec![Instruction::AssignAdviceFromInstance(b.clone(), a.clone())]
         }
-        (_, _) => {
+        (ColumnType::Advice, ColumnType::Advice) => {
             vec![
                 Instruction::AssignAdvice(a.clone(), CellExpression::CellValue(b.clone())),
                 Instruction::ConstrainEqual(a.clone(), b.clone()),
             ]
         }
+        (_, _) => todo!()
     });
     a.clone()
 }

@@ -10,8 +10,14 @@ pub fn main() -> Result<(), Box<EvalAltResult>> {
     //     eprintln!("My backtrace: {:#?}", backtrace);
     // }));
 
-    let code = fs::read_to_string("poseidon.plonk").unwrap();
-    let _output = try_run(code)?;
+    let code = fs::read_to_string("mimc5.plonk").expect("read file failed");
+    let output = try_run(code);
+    match output {
+        Ok(_) => (),
+        Err(e) => {
+            println!("Script Error: {:#?}", e);
+        }
+    }
     // let d = halo2_summarizer::trim(&output, Some(0..16));
     // let d = halo2_summarizer::trim(&output);
     // let d = output;

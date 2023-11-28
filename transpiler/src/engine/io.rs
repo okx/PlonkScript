@@ -1,10 +1,11 @@
 use crate::system::*;
 use crate::CONTEXT;
+use crate::system::cell_expression::ToValueString;
 
 pub const DEFAULT_INSTANCE_COLUMN_NAME: &str = "defins";
 
 pub fn register_io(engine: &mut rhai::Engine) {
-        let _ = &mut engine
+    let _ = &mut engine
         .register_fn("init_input", init_input)
         .register_fn("init_output", init_output)
         .register_fn("set_output", set_output)
@@ -14,7 +15,8 @@ pub fn register_io(engine: &mut rhai::Engine) {
         .register_fn("set_parameter", set_parameter)
         .register_fn("set_parameter", set_parameter_i64)
         .register_fn("inspect", inspect)
-        ;
+        .register_fn("inspect", inspect_ce)
+        .register_fn("inspect", inspect_str);
 }
 
 fn get_lastest_instance_index() -> i64 {
@@ -112,5 +114,13 @@ fn set_parameter(name: String, v: String) {
 }
 
 fn inspect(obj: Cell) {
+    println!("{:#?}", obj);
+}
+
+fn inspect_ce(obj: CellExpression) {
+    println!("{:#?}", obj.to_value_string());
+}
+
+fn inspect_str(obj: String) {
     println!("{:#?}", obj);
 }

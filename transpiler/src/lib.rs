@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use circuit::MyCircuit;
 use rhai::{Engine, EvalAltResult};
-use system::{SimplifiedConstraitSystem, cell_expression::ToField};
+use system::{cell_expression::ToField, SimplifiedConstraitSystem};
 use transpiler::transpile;
 
 use crate::engine::EngineExt;
@@ -64,31 +64,39 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     let public_input = unsafe { CONTEXT.signals.clone() }
         .into_iter()
         .map(|x| match x.value {
-            Some(x) => x.to_field().expect(format!("Decoding failed: {x}").as_str()),
+            Some(x) => x
+                .to_field()
+                .expect(format!("Decoding failed: {x}").as_str()),
             None => panic!("No value for signal [{}]", x.name),
         })
         .collect();
 
     let ret = run_prover(k, public_input);
 
-    Ok(ret)
+    ret.map_err(|e| {
+        Box::new(EvalAltResult::ErrorSystem(
+            "Prove failed".to_string(),
+            Box::new(e),
+        ))
+    })
 }
 
-fn run_prover(k: u32, public_input: Vec<halo2_proofs::pasta::Fp>) -> String {
+fn run_prover(
+    k: u32,
+    public_input: Vec<halo2_proofs::pasta::Fp>,
+) -> Result<String, halo2_proofs::plonk::Error> {
     let circuit = MyCircuit {
         _marker: std::marker::PhantomData,
     };
 
     let presult = halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]);
 
-    if let Ok(prover) = presult {
+    presult.map(|prover| {
         let d = format!("{:#?}", prover);
         let mut file = std::fs::File::create("visualization.rust").unwrap();
         std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
 
         prover.assert_satisfied();
         format!("{:#?}", prover)
-    } else {
-        format!("{:?}", presult.err())
-    }
+    })
 }
