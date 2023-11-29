@@ -49,6 +49,19 @@
                 "--extensionDevelopmentPath=${workspaceFolder}/vscode-ext"
             ],
             "cwd": "${workspaceFolder}/vscode-ext"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Jest: current file",
+            "runtimeExecutable": "/Users/oker/.nvm/versions/node/v18.17.0/bin/node",
+            "runtimeArgs": [
+                "--inspect-brk",
+                "${workspaceFolder}/ui/node_modules/.bin/jest",
+                "--runInBand",
+            ],
+            "cwd": "${workspaceFolder}/ui",
+            "console": "integratedTerminal"
         }
     ]
 }
