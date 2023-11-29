@@ -143,9 +143,6 @@ region permute_state(in1, a, f, s) {
         f[i] <-- rc[i];
         a[i + 1] <== pow_5(a[i] + rc[i]);
         s[i] <-- enable;
-        if i == 1 {
-            let x = a[i] + f[i];
-        }
     }
 
     a[r]
