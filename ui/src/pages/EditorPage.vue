@@ -25,7 +25,7 @@
 import { Ref, ref } from 'vue';
 import * as monaco from 'monaco-editor';
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
-import { language } from 'src/services/PlonkScriptLanguage';
+import { language, theme } from 'src/services/PlonkScriptLanguage';
 import init, { try_run } from '../transpiler';
 import { convertMockProverOutputToObject } from 'src/services/MockProverTranslator';
 import { MockProverData } from 'src/services/ConstraintSystem';
@@ -38,6 +38,8 @@ self.MonacoEnvironment = {
 
 monaco.languages.register({ id: 'plonkscript' });
 monaco.languages.setMonarchTokensProvider('plonkscript', language);
+    monaco.editor.defineTheme('plonkscript', theme);
+    // monaco.editor.setModelMarkers();
 
 const splitPercent = ref(50);
 const editorRef = ref(null);
@@ -87,7 +89,7 @@ setTimeout(() => {
     editor = monaco.editor.create(editorRef.value as HTMLElement, {
       value: code,
       language: 'plonkscript',
-      // theme: 'vs-dark',
+      theme: 'plonkscript',
       minimap: {
         enabled: false,
       },
