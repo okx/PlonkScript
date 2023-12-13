@@ -47,9 +47,13 @@ export function convertMockProverOutputToJson(content: string): string {
     '$1[$2        ]'
   );
 
+  // special case for PhantomData
+  content = content.replaceAll(/([\w\d]+)\((PhantomData)<(.*)>\)<(.*)=(.*)>,/g, '{ "type": "$1", "$2": "$3", "$4": "$5" },');
+
   content = content.replaceAll(/({\s*)([^:]*)\s*\(/g, '$1"$2": (');
 
-  content = content.replaceAll(/([\w\d]+) ?{/g, '{ type: $1,');
+  // quote type
+  content = content.replaceAll(/([\w\d]+) ?{/g, '{ type: "$1",');
 
   content = content.replaceAll(/([\w\d]+)\(/g, '[ "$1",');
 
@@ -64,7 +68,8 @@ export function convertMockProverOutputToJson(content: string): string {
   content = content.replaceAll(/\)/g, ']');
 
   // standardize quoted key
-  content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
+  // content = content.replace(/(['"])?([\w\d]+)(['"])?:\s*/g, '"$2": ');
+  content = content.replace(/[^"](['])?([\w\d]+)(['])?:[^:]\s*/g, '"$2": ');
 
   // quote value to string
   content = content.replace(/:\s*([^" {([\n]+),$/gm, ': "$1",');
