@@ -6,9 +6,14 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        name: 'analyzer',
-        path: '/analyzer',
+        name: 'halo2analyzer',
+        path: '/analyzer/halo2',
         component: () => import('pages/AnalyzerPage.vue'),
+      },
+      {
+        name: 'plonky2analyzer',
+        path: '/analyzer/plonky2',
+        component: () => import('pages/Plonky2AnalyzerPage.vue'),
       },
       {
         name: 'editor',

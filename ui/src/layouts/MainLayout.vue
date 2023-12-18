@@ -22,14 +22,34 @@
           :class="{ active: $route.name === 'editor' }"
         />
         <!-- <q-separator dark vertical inset /> -->
-        <q-btn
-          stretch
-          :flat="$route.name != 'analyzer'"
+
+        <q-btn-dropdown
           label="Analyzer"
-          :to="{ name: 'analyzer' }"
+          stretch
+          :flat="
+            $route.name != 'plonky2analyzer' && $route.name != 'halo2analyzer'
+          "
           class="menu-button"
-          :class="{ active: $route.name === 'analyzer' }"
-        />
+          :class="{
+            active:
+              $route.name === 'plonky2analyzer' ||
+              $route.name === 'halo2analyzer',
+          }"
+        >
+          <q-list>
+            <q-item clickable v-close-popup :to="{ name: 'halo2analyzer' }">
+              <q-item-section>
+                <q-item-label>Halo2 Analyzer</q-item-label>
+              </q-item-section>
+            </q-item>
+
+            <q-item clickable v-close-popup :to="{ name: 'plonky2analyzer' }">
+              <q-item-section>
+                <q-item-label>Plonky2 Analyzer</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
 
         <!-- <div>Demo Version</div> -->
       </q-toolbar>
