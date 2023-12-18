@@ -56,6 +56,15 @@ export default defineConfig({
           { text: "Control Flow", link: "/language/controlflow" },
           // { text: "Debugging", link: "/language/debugging" },
           // { text: "Module", link: "/language/module" },
+          {
+            text: "Examples",
+            collapsed: false,
+            items: [
+              { text: "Fibonacci", link: "/example/fibonacci" },
+              { text: "MiMC5", link: "/example/mimc" },
+              { text: "Poseidon", link: "/example/poseidon" },
+            ],
+          },
         ],
       },
       // {
