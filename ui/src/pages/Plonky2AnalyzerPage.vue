@@ -40,8 +40,7 @@
         </q-card-section>
 
         <q-card-section>
-          Select custom model which produced by the MockProver, inject your code
-          like:
+          inject your code like this to get the trace for analysis:
           <pre>
 let data = builder.build::&lt;C&gt;();
 let proof = data.prove(pw.clone())?;
@@ -56,6 +55,15 @@ let _output = format!("Plonky2Data {&#123;\nwitness: {},\ndata: {},\nproof: {}\n
 let mut file = std::fs::File::create("output.rust").unwrap();
 std::io::Write::write_all(&mut file, _output.as_bytes()).unwrap();</pre
           >
+          You also need to modify <code>PartitionWitness</code> in
+          <code>plonky2/src/iop/witness.rs</code> to include <code>Debug</code>,
+          like this:
+          <pre>
+#[derive(Clone<b>, Debug</b>)]
+pub struct PartitionWitness&lt;'a, F: Field> {
+    pub values: Vec&lt;Option&lt;F>>,
+    ...
+} </pre>
           <!-- or
           <pre>
 plonky2_summarizer = "0.1.0"
