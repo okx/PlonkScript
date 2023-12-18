@@ -49,7 +49,7 @@ std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();</pre
           >
           or
           <pre>
-halo2_summarizer = "0.1.0"
+halo2_summarizer = "0.1.1"
 
 let d = format!("{:#?}", prover);
 let d = halo2_summarizer::trim(&d, Some(0..1024));

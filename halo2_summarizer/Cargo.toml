@@ -1,6 +1,6 @@
 [package]
 name = "halo2_summarizer"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "A summarizer for Halo2's MockProver output"
 license = "MIT"
