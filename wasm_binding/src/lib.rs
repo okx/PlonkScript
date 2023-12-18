@@ -1,19 +1,21 @@
 #![allow(unused_variables)]
 
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use std::panic;
 
 #[derive(Serialize, Deserialize)]
 pub struct TryRunRequest {
-    pub k: u32,
     pub code: String,
-    pub inputs: HashMap<String, String>,
 }
 
 #[allow(dead_code)]
 fn main() {
     use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen(start)]
+    pub fn initialization() {
+        panic::set_hook(Box::new(console_error_panic_hook::hook));
+    }
 
     #[wasm_bindgen]
     extern "C" {
@@ -32,22 +34,10 @@ fn main() {
     }
 
     #[wasm_bindgen]
-    pub fn try_run(
-        request: JsValue,
-    ) -> Result<JsValue, JsValue> {
-        // log(&format!("try_run!"));
-
+    pub fn try_run(request: JsValue) -> Result<JsValue, JsValue> {
         let req: TryRunRequest = serde_wasm_bindgen::from_value(request)?;
-        // log(&format!("deserialized!"));
-        // log(&format!("{:?}", req.code));
-        // log(&format!("{:?}", req.k));
-        let inputs = Vec::from_iter(
-            req.inputs
-                .iter()
-                .map(|x| (x.0.to_string(), x.1.to_string())),
-        );
-        // log(&format!("{:?}", inputs));
-        match transpiler::try_run(req.code, req.k, inputs) {
+        // log(&format!("try_run!"));
+        match transpiler::try_run(req.code) {
             Ok(d) => Ok(JsValue::from_str(d.as_str())),
             Err(d) => Err(JsValue::from_str(d.to_string().as_str())),
         }

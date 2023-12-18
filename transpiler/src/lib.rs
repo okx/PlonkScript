@@ -43,8 +43,10 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     engine.register_plonk_script();
 
     let script = transpile(code);
-    let mut file = std::fs::File::create("debug.rhai").unwrap();
-    std::io::Write::write_all(&mut file, script.as_bytes()).unwrap();
+    if cfg!(debug_assertions) {
+        let mut file = std::fs::File::create("debug.rhai").unwrap();
+        std::io::Write::write_all(&mut file, script.as_bytes()).unwrap();
+    }
 
     // println!("{}", script);
     if let Err(error) = engine.run(script.as_str()) {
@@ -53,8 +55,10 @@ pub fn try_run(code: String) -> Result<String, Box<EvalAltResult>> {
     }
 
     let d = unsafe { format!("{:#?}", CONTEXT) };
-    let mut file = std::fs::File::create("context.rust").unwrap();
-    std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+    if cfg!(debug_assertions) {
+        let mut file = std::fs::File::create("context.rust").unwrap();
+        std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+    }
 
     let k = unsafe { CONTEXT.inputs.get("k").or(Some(&"8".to_string())) }
         .unwrap()
@@ -92,9 +96,11 @@ fn run_prover(
     let presult = halo2_proofs::dev::MockProver::run(k, &circuit, vec![public_input.clone()]);
 
     presult.map(|prover| {
-        let d = format!("{:#?}", prover);
-        let mut file = std::fs::File::create("visualization.rust").unwrap();
-        std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+        if cfg!(debug_assertions) {
+            let d = format!("{:#?}", prover);
+            let mut file = std::fs::File::create("visualization.rust").unwrap();
+            std::io::Write::write_all(&mut file, d.as_bytes()).unwrap();
+        }
 
         prover.assert_satisfied();
         format!("{:#?}", prover)

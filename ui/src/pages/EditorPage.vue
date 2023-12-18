@@ -38,15 +38,39 @@ self.MonacoEnvironment = {
 
 monaco.languages.register({ id: 'plonkscript' });
 monaco.languages.setMonarchTokensProvider('plonkscript', language);
-    monaco.editor.defineTheme('plonkscript', theme);
-    // monaco.editor.setModelMarkers();
+monaco.editor.defineTheme('plonkscript', theme);
+// monaco.editor.setModelMarkers();
 
 const splitPercent = ref(50);
 const editorRef = ref(null);
 
 const code = `
+# k: 4
+# in1: 1
+# in2: 1
+
 gate add(a, b, c, s) {
     s <| a + b - c;
+}
+
+
+// method 1
+region first_row(a, b, c, s, in1, in2) {
+    a[0] <== in1;
+    b[0] <== in2;
+    c[0] <== a[0] + b[0];
+    s[0] <-- enable;
+
+    [b[0], c[0]]
+}
+
+region next_row(a, b, c, s, last_b, last_c) {
+    a[0] <== last_b;
+    b[0] <== last_c;
+    c[0] <== a[0] + b[0];
+    s[0] <-- enable;
+
+    c[0]
 }
 
 let N = 10;
@@ -62,20 +86,16 @@ private advice c;
 public selector s;
 
 add(a, b, c, s);
-
-a[0] <== in1;
-b[0] <== in2;
-
-for i in 0..N {
-    if (i > 0) {
-        a[i] <== b[i - 1];
-        b[i] <== c[i - 1];
-    }
-    c[i] <== a[i] + b[i];
-    s[i] <-- enable;
+let fr = first_row(a, b, c, s, in1, in2);
+let last_b = fr[0];
+let last_c = fr[1];
+for i in 1..N {
+    let c = next_row(a, b, c, s, last_b, last_c);
+    last_b = last_c;
+    last_c = c;
 }
 
-out <== c[N-1];
+out <== last_c;
 
 // Press Ctrl+Enter to execute the code
 `;
@@ -112,11 +132,7 @@ setTimeout(() => {
 
       run: function (ed) {
         const code = ed.getValue();
-        const result = try_run({
-          k: 4,
-          code,
-          inputs: { in1: '1', in2: '1' },
-        });
+        const result = try_run({ code });
         vis.value = convertMockProverOutputToObject(result);
       },
     });
