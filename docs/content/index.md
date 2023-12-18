@@ -19,7 +19,7 @@ features:
     details: Including comprehensive information on ZKP, detailed tutorials, and more. These resources can enhance your understanding of this powerful tool.
   - title: Plonk Script
     details: It's a DSL for plonkish arithmetic circuits with enhanced readability, expressiveness and compatibility
-  - title: Standardization
-    details: We aim to provide a platform that fosters uniformity and consistency in the usage of Plonkish circuits, ensuring compatibility across the ecosystem.
+  - title: Visualization
+    details: Offering interactive, detailed visuals for an intuitive grasp of Plonkish circuits, enhancing understanding and bringing insights.
 ---
 
