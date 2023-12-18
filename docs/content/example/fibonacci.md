@@ -10,8 +10,6 @@ gate add(a, b, c, s) {
     s <| a + b - c;
 }
 
-
-// method 1
 region first_row(a, b, c, s, in1, in2) {
     a[0] <== in1;
     b[0] <== in2;
