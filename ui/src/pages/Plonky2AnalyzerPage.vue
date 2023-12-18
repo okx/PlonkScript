@@ -36,7 +36,7 @@
 
       <q-card v-else class="">
         <q-card-section>
-          <div class="text-h6">Custom</div>
+          <div class="text-h6">Plonky2 Analyzer for custom data</div>
         </q-card-section>
 
         <q-card-section>
