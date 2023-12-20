@@ -67,6 +67,14 @@ export default defineConfig({
           },
         ],
       },
+      {
+        text: "Analyzer",
+        collapsed: false,
+        items: [
+          { text: "Halo2", link: "/analyzer/halo2" },
+          { text: "Plonky2", link: "/analyzer/plonky2" },
+        ],
+      },
       // {
       //   text: "Reference Guide",
       //   collapsed: false,
