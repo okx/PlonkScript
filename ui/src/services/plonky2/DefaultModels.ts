@@ -230,6 +230,7 @@ export interface RowFieldWithPosition extends RowField {
   index: number;
   raw_index: number;
   representative_map: number;
+  representative_value: WitnessValue;
   row:number;
   col:number;
 }

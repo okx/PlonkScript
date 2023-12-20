@@ -246,7 +246,13 @@
             <!-- {{ props.value }} -->
             <q-badge
               v-if="props.value?.value"
-              :label="props.value.value == 'None' ? '-' : props.value.value[1]"
+              :label="
+                props.value.value == 'None'
+                  ? props.value.representative_value != 'None'
+                    ? props.value.representative_value[1]
+                    : '-'
+                  : props.value.value[1]
+              "
               :outline="
                 props.value.raw_index == props.value.representative_map
                   ? false

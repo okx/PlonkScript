@@ -34,6 +34,7 @@ export function getRows(
   const rownum = parseInt(witness.degree);
   const total = colnum * rownum;
 
+  // private witness
   for (let r = 0; r < rownum; r++) {
     const row: Record<string, RowFieldWithPosition> = {};
     (row as any)['index'] = r;
@@ -47,12 +48,14 @@ export function getRows(
         representative_map: rmval,
         row: Math.floor(rmval / colnum),
         col: rmval % colnum,
+        representative_value: arr[rmval],
       };
     }
 
     rows.push(row);
   }
 
+  // inputs(both private and public)
   {
     const row: Record<string, RowFieldWithPosition> = {};
     for (let i = 0; i < arr.length - total; i++) {
@@ -65,6 +68,7 @@ export function getRows(
         representative_map: rmval,
         row: Math.floor(rmval / colnum),
         col: rmval % colnum,
+        representative_value: arr[rmval],
       };
     }
 
