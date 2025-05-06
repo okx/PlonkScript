@@ -5,3 +5,4 @@ out.rust
 debug.rhai
 context.rust
 visualization.rust
+*.vsix
