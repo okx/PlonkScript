@@ -31,6 +31,7 @@ export type PolynomialExpression =
       column_index: NumberType;
       query_index: NumberType;
       rotation: RotationType;
+      phase?: ['Phase', NumberType];
     }
   | ['Negated', PolynomialExpression]
   | ['Sum', PolynomialExpression, PolynomialExpression]
@@ -44,7 +45,7 @@ export type PolynomialExpression =
       {
         type: 'Challenge';
         index: NumberType;
-        phase: ['Phase', NumberType];
+        phase?: ['Phase', NumberType];
       }
     ];
 
@@ -93,10 +94,12 @@ export type ColumnTypeString = 'Fixed' | 'Advice' | 'Instance';
 export interface ColumnType {
   type: 'Column';
   index: NumberType;
-  column_type: ColumnTypeString | {
-    type: ColumnTypeString,
-    phase: ['Phase', NumberType]
-  };
+  column_type:
+    | ColumnTypeString
+    | {
+        type: ColumnTypeString;
+        phase: ['Phase', NumberType];
+      };
 }
 export interface GatesEntity {
   type: string;
@@ -196,8 +199,13 @@ export function stringifyGate(polys: PolynomialExpression): string {
     if (polys[0] == 'SelectorExpression')
       // special type from tiny-ram-halo2
       return `{${stringifyGate(polys[1])}}`;
-    if (polys[0] == 'Challenge')
-      return `challenge_${polys[1].index}_${polys[1].phase[1]}`;
+    if (polys[0] == 'Challenge') {
+      const phaseHint =
+        polys[1].phase?.[1] && polys[1].phase?.[1] != '0'
+          ? `^${polys[1].phase?.[1]}`
+          : '';
+      return `challenge_${polys[1].index}${phaseHint}`;
+    }
   }
 
   // console.log('object polys', polys);
@@ -207,9 +215,11 @@ export function stringifyGate(polys: PolynomialExpression): string {
   try {
     const rotationHint =
       polys.rotation[1] == '0' ? '' : `[${polys.rotation[1]}]`;
+    const phaseHint =
+      polys.phase?.[1] && polys.phase?.[1] != '0' ? `^${polys.phase?.[1]}` : '';
     return `${polys.type[0].toLowerCase()}_${
       polys.column_index
-    }${rotationHint}`;
+    }${rotationHint}${phaseHint}`;
   } catch (error) {
     console.error('error getting column name', polys, error);
     return '';
@@ -272,7 +282,10 @@ export function getRelativeColumns(polys: PolynomialExpression): string[] {
     if (polys[0] == 'Scaled') return getRelativeColumns(polys[1]);
     if (polys[0] == 'SelectorExpression') return getRelativeColumns(polys[1]);
     if (polys[0] == 'Challenge')
-      return ['challenge_' + polys[1].index + '_' + polys[1].phase[1]];
+    {
+      const phaseHint = polys[1].phase?.[1] && polys[1].phase?.[1] != '0' ? `^${polys[1].phase?.[1]}` : '';
+      return ['challenge_' + polys[1].index + phaseHint];
+    }
   }
 
   if (!polys.column_index || !polys.type) {
@@ -658,5 +671,7 @@ function getColumnName(col: ColumnType): string {
 
 export function formularize(exp: string): string {
   // f_0 -> f<sub>0</sub>
-  return exp.replace(/_(\d+)/g, '<sub>$1</sub>');
+  return exp
+    .replace(/_(\d+)/g, '<sub>$1</sub>')
+    .replace(/\^([0-9]+)/g, '<sup>$1</sup>');
 }
