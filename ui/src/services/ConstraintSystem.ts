@@ -21,20 +21,32 @@ export interface RowFieldWithPosition extends RowField {
   region: string;
 }
 
+export type NumberType = string;
 export type RotationType = ['Rotation', string];
 export type PolynomialExpression =
   | ['Constant', string]
   // | ["Selector", ]
   | {
       type: 'Fixed' | 'Advice' | 'Instance';
-      column_index: string;
-      query_index: string;
+      column_index: NumberType;
+      query_index: NumberType;
       rotation: RotationType;
     }
   | ['Negated', PolynomialExpression]
   | ['Sum', PolynomialExpression, PolynomialExpression]
   | ['Product', PolynomialExpression, PolynomialExpression]
-  | ['Scaled', PolynomialExpression, string];
+  | ['Scaled', PolynomialExpression, string]
+  // special type from tiny-ram-halo2
+  | ['SelectorExpression', PolynomialExpression]
+  // special type from challenge tutorial: https://halo2.zksecurity.xyz/challenges/
+  | [
+      'Challenge',
+      {
+        type: 'Challenge';
+        index: NumberType;
+        phase: ['Phase', NumberType];
+      }
+    ];
 
 export type CellValue = string[] | string;
 
@@ -77,10 +89,14 @@ export interface LookupType {
   input_expressions: PolynomialExpression[];
   table_expressions: PolynomialExpression[];
 }
+export type ColumnTypeString = 'Fixed' | 'Advice' | 'Instance';
 export interface ColumnType {
   type: 'Column';
-  index: string;
-  column_type: 'Fixed' | 'Advice' | 'Instance';
+  index: NumberType;
+  column_type: ColumnTypeString | {
+    type: ColumnTypeString,
+    phase: ['Phase', NumberType]
+  };
 }
 export interface GatesEntity {
   type: string;
@@ -180,14 +196,24 @@ export function stringifyGate(polys: PolynomialExpression): string {
     if (polys[0] == 'SelectorExpression')
       // special type from tiny-ram-halo2
       return `{${stringifyGate(polys[1])}}`;
+    if (polys[0] == 'Challenge')
+      return `challenge_${polys[1].index}_${polys[1].phase[1]}`;
   }
 
   // console.log('object polys', polys);
 
   if (!polys.rotation) console.warn('wrong rotation', polys);
   //TODO: standardize column name getting
-  const rotationHint = polys.rotation[1] == '0' ? '' : `[${polys.rotation[1]}]`;
-  return `${polys.type[0].toLowerCase()}_${polys.column_index}${rotationHint}`;
+  try {
+    const rotationHint =
+      polys.rotation[1] == '0' ? '' : `[${polys.rotation[1]}]`;
+    return `${polys.type[0].toLowerCase()}_${
+      polys.column_index
+    }${rotationHint}`;
+  } catch (error) {
+    console.error('error getting column name', polys, error);
+    return '';
+  }
 }
 
 export function convertGatesToStringifyDictionary(data: MockProverData): {
@@ -244,9 +270,13 @@ export function getRelativeColumns(polys: PolynomialExpression): string[] {
       return getRelativeColumns(polys[1]).concat(getRelativeColumns(polys[2]));
 
     if (polys[0] == 'Scaled') return getRelativeColumns(polys[1]);
-    if (polys[0] == 'SelectorExpression')
-      // special type from tiny-ram-halo2
-      return getRelativeColumns(polys[1]);
+    if (polys[0] == 'SelectorExpression') return getRelativeColumns(polys[1]);
+    if (polys[0] == 'Challenge')
+      return ['challenge_' + polys[1].index + '_' + polys[1].phase[1]];
+  }
+
+  if (!polys.column_index || !polys.type) {
+    throw new Error('Invalid polynomial expression: ' + JSON.stringify(polys));
   }
 
   return [
@@ -606,9 +636,9 @@ export function buildPermutationMap(data: MockProverDataPermutation) {
       }
 
       if (!permutationMap[fromCellId].includes(toCellId))
-      permutationMap[fromCellId].push(toCellId);
+        permutationMap[fromCellId].push(toCellId);
       if (!permutationMap[toCellId].includes(fromCellId))
-      permutationMap[toCellId].push(fromCellId);
+        permutationMap[toCellId].push(fromCellId);
     }
   }
 
@@ -620,7 +650,10 @@ function getCellId(colName: string, rowIndex: number): string {
 }
 
 function getColumnName(col: ColumnType): string {
-  return `${col.column_type.toLowerCase()}-${col.index}`;
+  if (typeof col.column_type === 'string') {
+    return `${col.column_type.toLowerCase()}-${col.index}`;
+  }
+  return `${col.column_type.type.toLowerCase()}-${col.index}`;
 }
 
 export function formularize(exp: string): string {
